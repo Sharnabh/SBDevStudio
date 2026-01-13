@@ -1,68 +1,31 @@
 import asyncio
 import logging
 import os
-import smtplib
-import ssl
-from email.message import EmailMessage
 from typing import Any, Dict, NamedTuple
+
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 logger = logging.getLogger(__name__)
 
 
-class SmtpConfig(NamedTuple):
-    host: str
-    port: int
-    user: str | None
-    password: str | None
+class SendGridConfig(NamedTuple):
+    api_key: str
     from_addr: str
-    notify_to: str | None
+    notify_to: str
 
 
-def _get_smtp_config() -> SmtpConfig | None:
-    host = os.getenv("SMTP_HOST")
-    from_addr = os.getenv("SMTP_FROM") or os.getenv("SMTP_USER") or ""
-    if not host or not from_addr:
+def _get_sendgrid_config() -> SendGridConfig | None:
+    api_key = os.getenv("SENDGRID_API_KEY")
+    from_addr = os.getenv("SENDGRID_FROM") or ""
+    notify_to = os.getenv("NOTIFY_TO") or from_addr
+    if not api_key or not from_addr:
         return None
-    return SmtpConfig(
-        host=host,
-        port=int(os.getenv("SMTP_PORT", "587")),
-        user=os.getenv("SMTP_USER"),
-        password=os.getenv("SMTP_PASS"),
-        from_addr=from_addr,
-        notify_to=os.getenv("NOTIFY_TO"),
-    )
+    return SendGridConfig(api_key=api_key, from_addr=from_addr, notify_to=notify_to)
 
 
-def _send_email_sync(message: EmailMessage, cfg: SmtpConfig) -> None:
-    """Send an EmailMessage synchronously using SMTP settings."""
-    use_ssl = cfg.port == 465
-    context = ssl.create_default_context()
-    if use_ssl:
-        with smtplib.SMTP_SSL(cfg.host, cfg.port, context=context) as server:
-            if cfg.user and cfg.password:
-                server.login(cfg.user, cfg.password)
-            server.send_message(message)
-    else:
-        with smtplib.SMTP(cfg.host, cfg.port) as server:
-            server.ehlo()
-            try:
-                server.starttls(context=context)
-                server.ehlo()
-            except smtplib.SMTPException:
-                # TLS not supported; continue without it
-                pass
-            if cfg.user and cfg.password:
-                server.login(cfg.user, cfg.password)
-            server.send_message(message)
-
-
-def _build_contact_email(contact_data: Dict[str, Any], cfg: SmtpConfig) -> EmailMessage:
-    msg = EmailMessage()
-    to_addr = cfg.notify_to or cfg.from_addr
-    msg["From"] = cfg.from_addr
-    msg["To"] = to_addr
-    msg["Subject"] = f"New contact from {contact_data.get('name', 'Unknown')}"
-
+def _build_contact_email(contact_data: Dict[str, Any], cfg: SendGridConfig) -> Mail:
+    subject = f"New contact from {contact_data.get('name', 'Unknown')}"
     body_lines = [
         "You received a new contact submission:\n",
         f"Name: {contact_data.get('name')}",
@@ -73,15 +36,25 @@ def _build_contact_email(contact_data: Dict[str, Any], cfg: SmtpConfig) -> Email
         "",
         f"Status: {contact_data.get('status', 'new')}",
     ]
-    msg.set_content("\n".join(body_lines))
-    return msg
+    return Mail(
+        from_email=cfg.from_addr,
+        to_emails=cfg.notify_to,
+        subject=subject,
+        plain_text_content="\n".join(body_lines),
+    )
+
+
+def _send_sendgrid(message: Mail, cfg: SendGridConfig) -> None:
+    client = SendGridAPIClient(cfg.api_key)
+    response = client.send(message)
+    logger.info("SendGrid send status=%s", response.status_code)
 
 
 def send_contact_notification(contact_data: Dict[str, Any]) -> None:
-    """Schedule contact email send (run in thread via asyncio.to_thread)."""
-    cfg = _get_smtp_config()
+    """Send contact notification via SendGrid."""
+    cfg = _get_sendgrid_config()
     if not cfg:
-        logger.warning("SMTP not configured (missing SMTP_HOST/SMTP_FROM); skipping send")
+        logger.warning("SendGrid not configured (missing SENDGRID_API_KEY/SENDGRID_FROM); skipping send")
         return
 
     try:
@@ -89,11 +62,12 @@ def send_contact_notification(contact_data: Dict[str, Any]) -> None:
     except Exception as exc:  # pragma: no cover
         logger.error("Failed to build contact email: %s", exc)
         return
+
     try:
-        # Run in thread to avoid blocking event loop
         asyncio.run_coroutine_threadsafe(
-            asyncio.to_thread(_send_email_sync, message, cfg), asyncio.get_event_loop()
+            asyncio.to_thread(_send_sendgrid, message, cfg), asyncio.get_event_loop()
         )
     except RuntimeError:
-        # No running loop; send synchronously (e.g., during startup scripts)
-        _send_email_sync(message, cfg)
+        _send_sendgrid(message, cfg)
+    except Exception as exc:  # pragma: no cover
+        logger.error("SendGrid send failed: %s", exc)
