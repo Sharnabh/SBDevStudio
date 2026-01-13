@@ -1,0 +1,17 @@
+# SB Dev Studio
+
+FastAPI + React monorepo for the SB Dev Studio marketing site and admin dashboard.
+
+## Project layout
+- `backend/`: FastAPI service with MongoDB, JWT auth, file uploads, and email notifications.
+- `frontend/`: React SPA (CRACO + Tailwind) with public site and protected admin area.
+- `tests/`: Python test scaffolding.
+
+## Quick start
+1) Copy env samples (see backend README) and set `MONGO_URL`, `DB_NAME`, and `SECRET_KEY`.
+2) Backend: create a virtualenv, then run `pip install -r backend/requirements.txt` and `uvicorn server:app --reload` from `backend/`.
+3) Frontend: `cd frontend && yarn install && yarn start` (uses `REACT_APP_API_BASE`, default `http://localhost:8000/api`).
+
+## Useful links
+- Backend docs: `backend/README.md`
+- Frontend docs: `frontend/README.md`
