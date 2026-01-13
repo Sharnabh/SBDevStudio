@@ -4,7 +4,6 @@ dotenv
 jose
 pydantic
 passlib
-smtplib
 httpx
 uvicorn
 boto3
