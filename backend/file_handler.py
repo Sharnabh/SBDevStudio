@@ -4,11 +4,12 @@ from pathlib import Path
 from fastapi import UploadFile, HTTPException
 from typing import List
 
-UPLOAD_DIR = Path("/app/backend/uploads")
+# Use env override for uploads; default to backend/uploads
+UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", Path(__file__).parent / "uploads"))
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp", "gif"}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 
-# Create upload directories
+# Create upload directories if missing
 (UPLOAD_DIR / "projects").mkdir(parents=True, exist_ok=True)
 (UPLOAD_DIR / "testimonials").mkdir(parents=True, exist_ok=True)
 

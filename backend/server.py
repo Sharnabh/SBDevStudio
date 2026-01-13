@@ -27,7 +27,7 @@ app = FastAPI(title="SB Dev Studio API", version="1.0.0")
 api_router = APIRouter(prefix="/api")
 
 # Mount uploads directory for serving static files
-UPLOAD_DIR = Path("/app/backend/uploads")
+UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", Path(__file__).parent / "uploads"))
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
