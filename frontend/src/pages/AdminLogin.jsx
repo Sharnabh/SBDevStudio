@@ -18,7 +18,7 @@ const AdminLogin = () => {
 
   useEffect(() => {
     if (token) {
-      navigate(location.state?.from?.pathname || "/admin", { replace: true });
+      navigate(location.state?.from?.pathname || "/admin/sbdevstudio", { replace: true });
     }
   }, [token, navigate, location.state]);
 
@@ -33,7 +33,7 @@ const AdminLogin = () => {
       const data = await adminLogin(form.username, form.password);
       login(data.access_token);
       toast({ title: "Welcome", description: "You are now signed in." });
-      navigate("/admin", { replace: true });
+      navigate("/admin/sbdevstudio", { replace: true });
     } catch (error) {
       const message = error?.response?.data?.detail || "Login failed";
       toast({ title: "Login error", description: message });
