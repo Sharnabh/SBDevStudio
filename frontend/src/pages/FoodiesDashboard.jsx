@@ -1,20 +1,20 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useFoodiesAuth } from "@/hooks/useFoodiesAuth";
-import { 
-  ArrowLeft, 
-  Building2, 
-  MapPin, 
-  Phone, 
-  Mail, 
-  User as UserIcon, 
-  Calendar, 
-  Info, 
-  Search, 
-  Sparkles, 
-  Key, 
-  ToggleLeft, 
-  ToggleRight, 
+import {
+  ArrowLeft,
+  Building2,
+  MapPin,
+  Phone,
+  Mail,
+  User as UserIcon,
+  Calendar,
+  Info,
+  Search,
+  Sparkles,
+  Key,
+  ToggleLeft,
+  ToggleRight,
   X,
   ChevronDown,
   LogOut,
@@ -75,9 +75,9 @@ async function foodieFetch(endpoint, options = {}) {
 const Stat = ({ label, value, color = "orange" }) => {
   const colors = {
     orange: "from-orange-500/10 to-amber-500/5 border-orange-500/20 text-orange-300",
-    rose:   "from-rose-500/10 to-pink-500/5 border-rose-500/20 text-rose-300",
-    amber:  "from-amber-500/10 to-yellow-500/5 border-amber-500/20 text-amber-300",
-    green:  "from-emerald-500/10 to-teal-500/5 border-emerald-500/20 text-emerald-300",
+    rose: "from-rose-500/10 to-pink-500/5 border-rose-500/20 text-rose-300",
+    amber: "from-amber-500/10 to-yellow-500/5 border-amber-500/20 text-amber-300",
+    green: "from-emerald-500/10 to-teal-500/5 border-emerald-500/20 text-emerald-300",
   };
   return (
     <div className={`rounded-2xl border bg-gradient-to-br p-5 ${colors[color]}`}>
@@ -105,11 +105,11 @@ const Row = ({ children, className = "" }) => (
 /* ── Badge ── */
 const Badge = ({ children, color = "gray" }) => {
   const colors = {
-    green:  "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+    green: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
     orange: "bg-orange-500/15 text-orange-300 border-orange-500/30",
-    red:    "bg-rose-500/15 text-rose-300 border-rose-500/30",
-    gray:   "bg-white/5 text-slate-400 border-white/10",
-    amber:  "bg-amber-500/15 text-amber-300 border-amber-500/30",
+    red: "bg-rose-500/15 text-rose-300 border-rose-500/30",
+    gray: "bg-white/5 text-slate-400 border-white/10",
+    amber: "bg-amber-500/15 text-amber-300 border-amber-500/30",
   };
   return (
     <span className={`text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border ${colors[color]}`}>
@@ -130,10 +130,10 @@ const ToggleFlag = ({ checked, onChange }) => (
 
 /* ── Sidebar nav items ── */
 const NAV = [
-  { id: "overview",           label: "Overview",            icon: "📊" },
-  { id: "restaurants",        label: "Restaurants",          icon: "🏪" },
-  { id: "subscription-packs", label: "Subscription Packs",  icon: "📦" },
-  { id: "feature-flags",      label: "Feature Flags",       icon: "🚩" },
+  { id: "overview", label: "Overview", icon: "📊" },
+  { id: "restaurants", label: "Restaurants", icon: "🏪" },
+  { id: "subscription-packs", label: "Subscription Packs", icon: "📦" },
+  { id: "feature-flags", label: "Feature Flags", icon: "🚩" },
 ];
 
 const CustomPackDropdown = ({ value, onChange, disabled, options }) => {
@@ -168,9 +168,9 @@ const CustomPackDropdown = ({ value, onChange, disabled, options }) => {
 
       {isOpen && (
         <div className={`absolute z-50 w-full bg-[#1a0b05] border border-orange-500/20 rounded-xl shadow-2xl shadow-black py-1 overflow-hidden animate-fade-in ${openUpwards ? "bottom-full mb-1 origin-bottom" : "top-full mt-1 origin-top"}`}>
-          <div 
-            className="fixed inset-0 z-[-1]" 
-            onClick={() => setIsOpen(false)} 
+          <div
+            className="fixed inset-0 z-[-1]"
+            onClick={() => setIsOpen(false)}
           />
           <div className="max-h-48 overflow-y-auto">
             {options.map((opt) => (
@@ -181,9 +181,8 @@ const CustomPackDropdown = ({ value, onChange, disabled, options }) => {
                   onChange(opt.value);
                   setIsOpen(false);
                 }}
-                className={`w-full text-left px-3 py-2.5 text-xs transition-colors hover:bg-orange-500/10 ${
-                  value === opt.value ? "text-orange-400 font-bold bg-white/[0.04]" : "text-slate-300"
-                }`}
+                className={`w-full text-left px-3 py-2.5 text-xs transition-colors hover:bg-orange-500/10 ${value === opt.value ? "text-orange-400 font-bold bg-white/[0.04]" : "text-slate-300"
+                  }`}
               >
                 {opt.label}
               </button>
@@ -204,24 +203,24 @@ export default function FoodiesDashboard() {
   const [outletQuery, setOutletQuery] = useState("");
 
   const [restaurants, setRestaurants] = useState([]);
-  const [outlets, setOutlets]         = useState([]);
-  const [stats, setStats]             = useState(null);
+  const [outlets, setOutlets] = useState([]);
+  const [stats, setStats] = useState(null);
   const [subscriptionPacks, setSubscriptionPacks] = useState([]);
   const [modulePricing, setModulePricing] = useState([]);
-  const [loading, setLoading]         = useState(true);
-  const [error, setError]             = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // For inline feature flag editing
   const [editingFlags, setEditingFlags] = useState({ id: null, type: null, flags: {} });
-  const [savingFlags, setSavingFlags]   = useState(false);
+  const [savingFlags, setSavingFlags] = useState(false);
 
   // Global feature flags state
   const [globalFlags, setGlobalFlags] = useState([]);
-  const [newFlag, setNewFlag]         = useState({ feature_key: "", is_enabled: true, description: "" });
-  const [flagQuery, setFlagQuery]     = useState("");
+  const [newFlag, setNewFlag] = useState({ feature_key: "", is_enabled: true, description: "" });
+  const [flagQuery, setFlagQuery] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingGlobalFlag, setEditingGlobalFlag] = useState(null); // id of flag being edited
-  const [savingGlobalFlag, setSavingGlobalFlag]   = useState(false);
+  const [savingGlobalFlag, setSavingGlobalFlag] = useState(false);
 
   // Subscription Pack Editor State
   const [showPackModal, setShowPackModal] = useState(false);
@@ -241,7 +240,7 @@ export default function FoodiesDashboard() {
   const [showOnboardModal, setShowOnboardModal] = useState(false);
   const [onboardStep, setOnboardStep] = useState(1);
   const [onboardingSubmitting, setOnboardingSubmitting] = useState(false);
-  
+
   const defaultFlags = {
     dashboard_enabled: true,
     orders_enabled: true,
@@ -520,7 +519,7 @@ export default function FoodiesDashboard() {
       });
 
       alert("🎉 Restaurant, Owner, Outlet, and Manager onboarded successfully!");
-      
+
       // Reset forms and reload dashboard data
       setShowOnboardModal(false);
       setOnboardStep(1);
@@ -562,9 +561,9 @@ export default function FoodiesDashboard() {
   };
 
   /* ── Derived stats ── */
-  const totalOutlets   = outlets.length;
-  const activeRests    = restaurants.filter((r) => r.is_active !== false).length;
-  const flaggedRests   = restaurants.filter((r) => r.feature_flags && Object.values(r.feature_flags).some((v) => v === false)).length;
+  const totalOutlets = outlets.length;
+  const activeRests = restaurants.filter((r) => r.is_active !== false).length;
+  const flaggedRests = restaurants.filter((r) => r.feature_flags && Object.values(r.feature_flags).some((v) => v === false)).length;
 
   /* ── All feature flag keys ── */
   const FLAG_KEYS = [
@@ -588,11 +587,11 @@ export default function FoodiesDashboard() {
   const sub = Array.isArray(currentRest?.subscriptions)
     ? currentRest.subscriptions[0]
     : currentRest?.subscriptions || {
-        plan_id: "starter",
-        status: "active",
-        max_outlets: 1,
-        max_staff_per_outlet: 5,
-      };
+      plan_id: "starter",
+      status: "active",
+      max_outlets: 1,
+      max_staff_per_outlet: 5,
+    };
 
   const planNames = [...new Set(linkedOutlets.map(o => {
     if (o.is_custom_subscription) return "Custom";
@@ -602,10 +601,10 @@ export default function FoodiesDashboard() {
     }
     return null;
   }).filter(name => name))];
-  
+
   const displayPlanName = planNames.length === 0 ? "Not Assigned" : planNames.join(" + ");
 
-  const filteredOutlets = linkedOutlets.filter((o) => 
+  const filteredOutlets = linkedOutlets.filter((o) =>
     o.name?.toLowerCase().includes(outletQuery.toLowerCase()) ||
     o.outlet_code?.toLowerCase().includes(outletQuery.toLowerCase()) ||
     o.address?.toLowerCase().includes(outletQuery.toLowerCase()) ||
@@ -649,11 +648,10 @@ export default function FoodiesDashboard() {
                 setActiveTab(item.id);
                 setSearchParams({});
               }}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-left transition-all duration-150 ${
-                activeTab === item.id
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-left transition-all duration-150 ${activeTab === item.id
                   ? "bg-gradient-to-r from-orange-500/20 to-rose-500/10 text-orange-200 border border-orange-500/20"
                   : "text-slate-400 hover:text-white hover:bg-white/5"
-              }`}
+                }`}
             >
               <span className="text-base">{item.icon}</span>
               {item.label}
@@ -695,12 +693,12 @@ export default function FoodiesDashboard() {
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <Stat label="Restaurants"      value={stats?.totalRestaurants || 0} color="orange" />
-              <Stat label="Total Outlets"    value={stats?.totalOutlets || 0}     color="amber"  />
-              <Stat label="Total Staff"      value={stats?.totalStaff || 0}       color="rose"   />
-              <Stat label="Total Orders"     value={stats?.totalOrders || 0}      color="green"  />
-              <Stat label="Total Customers"  value={stats?.totalCustomers || 0}   color="blue"   />
-              <Stat label="Restricted"       value={flaggedRests}                 color="rose"   />
+              <Stat label="Restaurants" value={stats?.totalRestaurants || 0} color="orange" />
+              <Stat label="Total Outlets" value={stats?.totalOutlets || 0} color="amber" />
+              <Stat label="Total Staff" value={stats?.totalStaff || 0} color="rose" />
+              <Stat label="Total Orders" value={stats?.totalOrders || 0} color="green" />
+              <Stat label="Total Customers" value={stats?.totalCustomers || 0} color="blue" />
+              <Stat label="Restricted" value={flaggedRests} color="rose" />
             </div>
 
             {/* Recent restaurants */}
@@ -912,9 +910,8 @@ export default function FoodiesDashboard() {
                     <Sparkles className="w-4 h-4 text-orange-400" />
                     Subscription Limits
                   </h3>
-                  <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded ${
-                    sub.status === "active" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
-                  }`}>
+                  <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded ${sub.status === "active" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                    }`}>
                     {sub.status || "active"}
                   </span>
                 </div>
@@ -927,8 +924,8 @@ export default function FoodiesDashboard() {
                       <span className="font-black text-white">{linkedOutlets.length} / {sub.max_outlets || 1}</span>
                     </div>
                     <div className="w-full h-1.5 rounded-full bg-white/5 overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-orange-500 to-amber-500 rounded-full transition-all duration-500" 
+                      <div
+                        className="h-full bg-gradient-to-r from-orange-500 to-amber-500 rounded-full transition-all duration-500"
                         style={{ width: `${Math.min((linkedOutlets.length / (sub.max_outlets || 1)) * 100, 100)}%` }}
                       />
                     </div>
@@ -983,9 +980,8 @@ export default function FoodiesDashboard() {
                             <h4 className="font-bold text-white group-hover:text-orange-400 transition-colors truncate text-sm">{o.name}</h4>
                             <p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider mt-0.5">Code: {o.outlet_code || "—"}</p>
                           </div>
-                          <span className={`flex-shrink-0 text-[9px] font-bold px-2 py-0.5 rounded border ${
-                            hasCustomFlags ? "bg-amber-500/10 text-amber-400 border-amber-500/20" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                          }`}>
+                          <span className={`flex-shrink-0 text-[9px] font-bold px-2 py-0.5 rounded border ${hasCustomFlags ? "bg-amber-500/10 text-amber-400 border-amber-500/20" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                            }`}>
                             {hasCustomFlags ? "Customized Flags" : "Standard Flags"}
                           </span>
                         </div>
@@ -1154,7 +1150,7 @@ export default function FoodiesDashboard() {
                         <span className="text-xl font-black text-emerald-400">₹{mp.price_monthly}</span>
                         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">/ mo</span>
                       </div>
-                      <button 
+                      <button
                         onClick={() => {
                           const newPrice = prompt(`Enter new monthly price for ${mp.name} (₹):`, mp.price_monthly);
                           if (newPrice !== null && !isNaN(newPrice)) {
@@ -1203,7 +1199,7 @@ export default function FoodiesDashboard() {
                 <h3 className="text-sm font-black text-white flex items-center gap-2">
                   <span>🚩</span> Create New Global Feature Flag
                 </h3>
-                
+
                 <div className="space-y-3">
                   <div>
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Feature Key *</label>
@@ -1270,7 +1266,7 @@ export default function FoodiesDashboard() {
             {/* Flags List Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {globalFlags
-                .filter((f) => 
+                .filter((f) =>
                   f.feature_key?.toLowerCase().includes(flagQuery.toLowerCase()) ||
                   f.description?.toLowerCase().includes(flagQuery.toLowerCase())
                 )
@@ -1287,15 +1283,14 @@ export default function FoodiesDashboard() {
                             </h4>
                             <p className="text-[9px] text-slate-500 font-mono mt-0.5">ID: {f.id}</p>
                           </div>
-                          
+
                           <div className="flex items-center gap-3">
                             <ToggleFlag
                               checked={f.is_enabled}
                               onChange={() => handleToggleGlobalFlag(f.id, f.is_enabled)}
                             />
-                            <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded ${
-                              f.is_enabled ? "bg-orange-500/15 text-orange-400 border border-orange-500/30" : "bg-white/5 text-slate-500 border border-white/10"
-                            }`}>
+                            <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded ${f.is_enabled ? "bg-orange-500/15 text-orange-400 border border-orange-500/30" : "bg-white/5 text-slate-500 border border-white/10"
+                              }`}>
                               {f.is_enabled ? "Active" : "Disabled"}
                             </span>
                           </div>
@@ -1382,16 +1377,14 @@ export default function FoodiesDashboard() {
                 setActiveTab(item.id);
                 setSearchParams({});
               }}
-              className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
-                isActive
+              className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${isActive
                   ? "text-orange-400"
                   : "text-slate-500 hover:text-slate-300"
-              }`}
+                }`}
             >
               <item.icon
-                className={`w-5 h-5 ${
-                  isActive ? "text-orange-500" : "text-slate-500"
-                }`}
+                className={`w-5 h-5 ${isActive ? "text-orange-500" : "text-slate-500"
+                  }`}
               />
               <span className="text-[10px] font-medium">{item.label}</span>
             </button>
@@ -1402,17 +1395,15 @@ export default function FoodiesDashboard() {
       {/* ─── SLIDING FEATURE FLAGS DRAWER ─── */}
       <div className={`fixed inset-0 z-50 transition-all duration-300 ${editingFlags.id ? "pointer-events-auto" : "pointer-events-none"}`}>
         {/* Backdrop overlay */}
-        <div 
+        <div
           onClick={() => setEditingFlags({ id: null, type: null, flags: {} })}
-          className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${
-            editingFlags.id ? "opacity-100" : "opacity-0"
-          }`}
+          className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${editingFlags.id ? "opacity-100" : "opacity-0"
+            }`}
         />
 
         {/* Drawer Panel */}
-        <div className={`absolute top-0 right-0 w-full max-w-md h-full bg-[#140600] border-l border-orange-500/20 shadow-2xl flex flex-col transition-transform duration-300 ease-out transform ${
-          editingFlags.id ? "translate-x-0" : "translate-x-full"
-        }`}>
+        <div className={`absolute top-0 right-0 w-full max-w-md h-full bg-[#140600] border-l border-orange-500/20 shadow-2xl flex flex-col transition-transform duration-300 ease-out transform ${editingFlags.id ? "translate-x-0" : "translate-x-full"
+          }`}>
           {/* Header */}
           <div className="p-6 border-b border-orange-950 flex items-center justify-between">
             <div>
@@ -1492,7 +1483,7 @@ export default function FoodiesDashboard() {
       {showOnboardModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
           {/* Backdrop overlay */}
-          <div 
+          <div
             onClick={() => {
               if (onboardingSubmitting) return;
               setShowOnboardModal(false);
@@ -1531,13 +1522,12 @@ export default function FoodiesDashboard() {
                 { step: 5, label: "Features" },
               ].map((s) => (
                 <div key={s.step} className="flex items-center gap-2 flex-shrink-0">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] transition-all ${
-                    onboardStep === s.step
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] transition-all ${onboardStep === s.step
                       ? "bg-gradient-to-r from-orange-500 to-rose-600 text-white shadow-md shadow-orange-500/20"
                       : onboardStep > s.step
-                      ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                      : "bg-white/5 text-slate-500 border border-white/5"
-                  }`}>
+                        ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                        : "bg-white/5 text-slate-500 border border-white/5"
+                    }`}>
                     {onboardStep > s.step ? "✓" : s.step}
                   </div>
                   <span className={onboardStep === s.step ? "text-orange-300" : "text-slate-500"}>
@@ -1550,7 +1540,7 @@ export default function FoodiesDashboard() {
 
             {/* Scrollable Form Content */}
             <form onSubmit={handleOnboardSubmit} className="flex-1 overflow-y-auto p-8 space-y-6">
-              
+
               {/* ── STEP 1: RESTAURANT INFO ── */}
               {onboardStep === 1 && (
                 <div className="space-y-4">
@@ -2039,7 +2029,7 @@ export default function FoodiesDashboard() {
       {/* ─── SUBSCRIPTION PACK MODAL ─── */}
       {showPackModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
-          <div 
+          <div
             onClick={() => { if (!savingPack) setShowPackModal(false); }}
             className="absolute inset-0 bg-black/70 backdrop-blur-md"
           />
@@ -2058,43 +2048,43 @@ export default function FoodiesDashboard() {
                 ✕
               </button>
             </div>
-            
+
             <form onSubmit={handleSavePack} className="flex-1 overflow-y-auto p-6 space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Pack Name *</label>
-                  <input required type="text" value={packFormData.name} onChange={e => setPackFormData({...packFormData, name: e.target.value})} className="w-full text-xs bg-white/[0.03] border border-white/[0.08] focus:border-orange-500/40 rounded-lg px-3 py-2 text-white outline-none" />
+                  <input required type="text" value={packFormData.name} onChange={e => setPackFormData({ ...packFormData, name: e.target.value })} className="w-full text-xs bg-white/[0.03] border border-white/[0.08] focus:border-orange-500/40 rounded-lg px-3 py-2 text-white outline-none" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Monthly Price (₹) *</label>
-                  <input required type="number" value={packFormData.price_monthly} onChange={e => setPackFormData({...packFormData, price_monthly: Number(e.target.value)})} className="w-full text-xs bg-white/[0.03] border border-white/[0.08] focus:border-orange-500/40 rounded-lg px-3 py-2 text-white outline-none" />
+                  <input required type="number" value={packFormData.price_monthly} onChange={e => setPackFormData({ ...packFormData, price_monthly: Number(e.target.value) })} className="w-full text-xs bg-white/[0.03] border border-white/[0.08] focus:border-orange-500/40 rounded-lg px-3 py-2 text-white outline-none" />
                 </div>
               </div>
-              
+
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Description</label>
-                <textarea value={packFormData.description} onChange={e => setPackFormData({...packFormData, description: e.target.value})} className="w-full text-xs bg-white/[0.03] border border-white/[0.08] focus:border-orange-500/40 rounded-lg px-3 py-2 text-white outline-none h-16 resize-none" />
+                <textarea value={packFormData.description} onChange={e => setPackFormData({ ...packFormData, description: e.target.value })} className="w-full text-xs bg-white/[0.03] border border-white/[0.08] focus:border-orange-500/40 rounded-lg px-3 py-2 text-white outline-none h-16 resize-none" />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-white/5 mt-4">
                 <div className="flex items-center gap-3">
-                  <ToggleFlag checked={packFormData.is_custom} onChange={() => setPackFormData({...packFormData, is_custom: !packFormData.is_custom})} />
+                  <ToggleFlag checked={packFormData.is_custom} onChange={() => setPackFormData({ ...packFormData, is_custom: !packFormData.is_custom })} />
                   <span className="text-xs font-bold text-slate-300">Is Custom Pack</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <ToggleFlag checked={packFormData.has_pos} onChange={() => setPackFormData({...packFormData, has_pos: !packFormData.has_pos})} />
+                  <ToggleFlag checked={packFormData.has_pos} onChange={() => setPackFormData({ ...packFormData, has_pos: !packFormData.has_pos })} />
                   <span className="text-xs font-bold text-slate-300">Core POS Included</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <ToggleFlag checked={packFormData.has_whatsapp} onChange={() => setPackFormData({...packFormData, has_whatsapp: !packFormData.has_whatsapp})} />
+                  <ToggleFlag checked={packFormData.has_whatsapp} onChange={() => setPackFormData({ ...packFormData, has_whatsapp: !packFormData.has_whatsapp })} />
                   <span className="text-xs font-bold text-slate-300">WhatsApp Integration</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <ToggleFlag checked={packFormData.has_delivery_partner} onChange={() => setPackFormData({...packFormData, has_delivery_partner: !packFormData.has_delivery_partner})} />
+                  <ToggleFlag checked={packFormData.has_delivery_partner} onChange={() => setPackFormData({ ...packFormData, has_delivery_partner: !packFormData.has_delivery_partner })} />
                   <span className="text-xs font-bold text-slate-300">Delivery Aggregators</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <ToggleFlag checked={packFormData.has_ordering_app} onChange={() => setPackFormData({...packFormData, has_ordering_app: !packFormData.has_ordering_app})} />
+                  <ToggleFlag checked={packFormData.has_ordering_app} onChange={() => setPackFormData({ ...packFormData, has_ordering_app: !packFormData.has_ordering_app })} />
                   <span className="text-xs font-bold text-slate-300">Ordering App</span>
                 </div>
               </div>
@@ -2105,12 +2095,12 @@ export default function FoodiesDashboard() {
                     const isOn = packFormData.feature_flags?.[key] !== false;
                     return (
                       <div key={key} className="flex items-center gap-3">
-                        <ToggleFlag 
-                          checked={isOn} 
+                        <ToggleFlag
+                          checked={isOn}
                           onChange={() => setPackFormData({
-                            ...packFormData, 
+                            ...packFormData,
                             feature_flags: { ...packFormData.feature_flags, [key]: !isOn }
-                          })} 
+                          })}
                         />
                         <span className="text-[11px] font-medium text-slate-300 capitalize truncate">{flagLabel(key)}</span>
                       </div>
@@ -2118,7 +2108,7 @@ export default function FoodiesDashboard() {
                   })}
                 </div>
               </div>
-              
+
               <div className="bg-orange-500/10 border border-orange-500/20 p-4 rounded-xl mt-4">
                 <p className="text-xs text-orange-200">For "Custom" packs, assigning the pack to an outlet unlocks manual feature flag control for that outlet. For standard packs, assigning the pack automatically locks and overwrites the outlet's flags with the pack's defaults.</p>
               </div>
@@ -2146,7 +2136,7 @@ export default function FoodiesDashboard() {
       {/* ─── CUSTOM MODULE MODAL ─── */}
       {showCustomModuleModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
-          <div 
+          <div
             onClick={() => {
               if (savingCustomModules) return;
               setShowCustomModuleModal(false);
@@ -2167,7 +2157,7 @@ export default function FoodiesDashboard() {
                 ✕
               </button>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-1 gap-3">
                 {modulePricing.map(mp => {
@@ -2178,20 +2168,20 @@ export default function FoodiesDashboard() {
                         <h4 className="text-sm font-bold text-white">{mp.name}</h4>
                         <p className="text-xs text-slate-400">₹{mp.price_monthly}/mo</p>
                       </div>
-                      <ToggleFlag 
-                        checked={isOn} 
+                      <ToggleFlag
+                        checked={isOn}
                         onChange={() => {
                           setCustomModuleData(prev => ({
-                            ...prev, 
+                            ...prev,
                             modules: { ...prev.modules, [mp.module_key]: !isOn }
                           }));
-                        }} 
+                        }}
                       />
                     </div>
                   );
                 })}
               </div>
-              
+
               <div className="bg-orange-950/20 border border-orange-500/20 rounded-xl p-4 flex justify-between items-center mt-4">
                 <span className="text-sm font-bold text-slate-300">Total Monthly Cost:</span>
                 <span className="text-2xl font-black text-orange-400">
