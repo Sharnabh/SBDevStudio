@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useFoodiesAuth } from "@/hooks/useFoodiesAuth";
+import { getAdminRoute } from "@/lib/routes";
 
 /* ────────────────────────────────────────────
    Foodies POS Login
@@ -51,7 +52,7 @@ export default function FoodiesLogin() {
 
       login(token);
       toast({ title: "Welcome to Foodies POS 🍽️", description: "Signed in successfully." });
-      navigate("/admin/foodies", { replace: true });
+      navigate(getAdminRoute("/foodies"), { replace: true });
     } catch (err) {
       toast({ title: "Login failed", description: err.message });
     } finally {

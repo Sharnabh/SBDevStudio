@@ -8,6 +8,7 @@ import FoodiesLogin from './pages/FoodiesLogin';
 import FoodiesDashboard from './pages/FoodiesDashboard';
 import { useAuth } from './hooks/useAuth';
 import { useFoodiesAuth } from './hooks/useFoodiesAuth';
+import { isAdminDomain, getAdminRoute } from './lib/routes';
 import './App.css';
 
 /* ── SBDevStudio auth guard ── */
@@ -15,7 +16,7 @@ const RequireSBDevAuth = ({ children }) => {
   const { token } = useAuth();
   const location = useLocation();
   if (!token) {
-    return <Navigate to="/admin/sbdevstudio/login" state={{ from: location }} replace />;
+    return <Navigate to={getAdminRoute('/sbdevstudio/login')} state={{ from: location }} replace />;
   }
   return children;
 };
@@ -25,23 +26,50 @@ const RequireFoodiesAuth = ({ children }) => {
   const { token } = useFoodiesAuth();
   const location = useLocation();
   if (!token) {
-    return <Navigate to="/admin/foodies/login" state={{ from: location }} replace />;
+    return <Navigate to={getAdminRoute('/foodies/login')} state={{ from: location }} replace />;
   }
   return children;
 };
 
 function App() {
+  const isSubdomain = isAdminDomain();
+
   return (
     <div className="App">
       <BrowserRouter>
         <Routes>
-          {/* Public site */}
-          <Route path="/" element={<HomePage />} />
+          {isSubdomain ? (
+            <>
+              {/* Admin Subdomain Root Routes */}
+              <Route path="/" element={<ProductSelector />} />
+              <Route path="/sbdevstudio/login" element={<AdminLogin />} />
+              <Route
+                path="/sbdevstudio"
+                element={
+                  <RequireSBDevAuth>
+                    <AdminDashboard />
+                  </RequireSBDevAuth>
+                }
+              />
+              <Route path="/foodies/login" element={<FoodiesLogin />} />
+              <Route
+                path="/foodies"
+                element={
+                  <RequireFoodiesAuth>
+                    <FoodiesDashboard />
+                  </RequireFoodiesAuth>
+                }
+              />
+            </>
+          ) : (
+            <>
+              {/* Main Site Routes */}
+              <Route path="/" element={<HomePage />} />
+            </>
+          )}
 
-          {/* Product selector — shown before any login */}
+          {/* Legacy /admin Routes (Fallback for main site and local dev) */}
           <Route path="/admin" element={<ProductSelector />} />
-
-          {/* ── SBDevStudio ── */}
           <Route path="/admin/sbdevstudio/login" element={<AdminLogin />} />
           <Route
             path="/admin/sbdevstudio"
@@ -51,8 +79,6 @@ function App() {
               </RequireSBDevAuth>
             }
           />
-
-          {/* ── Foodies POS ── */}
           <Route path="/admin/foodies/login" element={<FoodiesLogin />} />
           <Route
             path="/admin/foodies"
@@ -65,7 +91,6 @@ function App() {
 
           {/* Legacy redirect */}
           <Route path="/admin/login" element={<Navigate to="/admin" replace />} />
-
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

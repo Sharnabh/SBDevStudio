@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getAdminRoute } from "@/lib/routes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -66,7 +67,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     const load = async () => {
       if (!token) {
-        navigate("/admin/login", { replace: true });
+        navigate(getAdminRoute("/sbdevstudio/login"), { replace: true });
         return;
       }
       try {
@@ -85,7 +86,7 @@ const AdminDashboard = () => {
         const detail = error?.response?.data?.detail || "Session expired";
         toast({ title: "Auth required", description: detail });
         logout();
-        navigate("/admin/login", { replace: true });
+        navigate(getAdminRoute("/sbdevstudio/login"), { replace: true });
       } finally {
         setLoading(false);
       }
@@ -95,7 +96,7 @@ const AdminDashboard = () => {
 
   const handleLogout = () => {
     logout();
-    navigate("/admin/login", { replace: true });
+    navigate(getAdminRoute("/sbdevstudio/login"), { replace: true });
   };
 
   const techArray = (text) => text.split(",").map((t) => t.trim()).filter(Boolean);

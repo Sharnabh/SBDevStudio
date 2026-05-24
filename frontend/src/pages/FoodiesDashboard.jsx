@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useFoodiesAuth } from "@/hooks/useFoodiesAuth";
 import { 
@@ -15,8 +15,25 @@ import {
   Key, 
   ToggleLeft, 
   ToggleRight, 
-  X 
+  X,
+  ChevronDown,
+  LogOut,
+  Plus,
+  RefreshCw,
+  Store,
+  LayoutDashboard,
+  Tags,
+  Zap,
+  Globe,
+  Settings,
+  Shield,
+  Trash2,
+  ChevronRight,
+  TrendingUp,
+  CreditCard,
+  Users
 } from "lucide-react";
+import { getAdminRoute } from "@/lib/routes";
 
 /* ────────────────────────────────────────────
    Foodies POS Admin Dashboard
@@ -113,10 +130,70 @@ const ToggleFlag = ({ checked, onChange }) => (
 
 /* ── Sidebar nav items ── */
 const NAV = [
-  { id: "overview",      label: "Overview",       icon: "📊" },
-  { id: "restaurants",   label: "Restaurants",     icon: "🏪" },
-  { id: "feature-flags", label: "Feature Flags",  icon: "🚩" },
+  { id: "overview",           label: "Overview",            icon: "📊" },
+  { id: "restaurants",        label: "Restaurants",          icon: "🏪" },
+  { id: "subscription-packs", label: "Subscription Packs",  icon: "📦" },
+  { id: "feature-flags",      label: "Feature Flags",       icon: "🚩" },
 ];
+
+const CustomPackDropdown = ({ value, onChange, disabled, options }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [openUpwards, setOpenUpwards] = useState(false);
+  const buttonRef = useRef(null);
+
+  const selectedOption = options.find(o => o.value === value) || options[0];
+
+  const toggleDropdown = () => {
+    if (!isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      // If there is less than 220px below, open upwards to avoid clipping
+      setOpenUpwards(spaceBelow < 220);
+    }
+    setIsOpen(!isOpen);
+  };
+
+  return (
+    <div className="relative w-full">
+      <button
+        ref={buttonRef}
+        type="button"
+        disabled={disabled}
+        onClick={toggleDropdown}
+        className="w-full text-left text-xs bg-white/[0.03] border border-white/[0.08] hover:border-orange-500/40 rounded-lg px-3 py-2 text-white transition-all flex items-center justify-between group disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <span className="truncate">{selectedOption.label}</span>
+        <ChevronDown className={`w-3.5 h-3.5 text-slate-400 group-hover:text-orange-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+      </button>
+
+      {isOpen && (
+        <div className={`absolute z-50 w-full bg-[#1a0b05] border border-orange-500/20 rounded-xl shadow-2xl shadow-black py-1 overflow-hidden animate-fade-in ${openUpwards ? "bottom-full mb-1 origin-bottom" : "top-full mt-1 origin-top"}`}>
+          <div 
+            className="fixed inset-0 z-[-1]" 
+            onClick={() => setIsOpen(false)} 
+          />
+          <div className="max-h-48 overflow-y-auto">
+            {options.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => {
+                  onChange(opt.value);
+                  setIsOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2.5 text-xs transition-colors hover:bg-orange-500/10 ${
+                  value === opt.value ? "text-orange-400 font-bold bg-white/[0.04]" : "text-slate-300"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default function FoodiesDashboard() {
   const navigate = useNavigate();
@@ -129,6 +206,8 @@ export default function FoodiesDashboard() {
   const [restaurants, setRestaurants] = useState([]);
   const [outlets, setOutlets]         = useState([]);
   const [stats, setStats]             = useState(null);
+  const [subscriptionPacks, setSubscriptionPacks] = useState([]);
+  const [modulePricing, setModulePricing] = useState([]);
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState(null);
 
@@ -143,6 +222,20 @@ export default function FoodiesDashboard() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingGlobalFlag, setEditingGlobalFlag] = useState(null); // id of flag being edited
   const [savingGlobalFlag, setSavingGlobalFlag]   = useState(false);
+
+  // Subscription Pack Editor State
+  const [showPackModal, setShowPackModal] = useState(false);
+  const [packFormData, setPackFormData] = useState({
+    id: null, name: "", description: "", price_monthly: 0, price_yearly: 0,
+    has_pos: false, has_whatsapp: false, has_delivery_partner: false, has_ordering_app: false,
+    is_custom: false, max_staff_per_outlet: 5, feature_flags: {}
+  });
+  const [savingPack, setSavingPack] = useState(false);
+
+  // Custom Module Modal State
+  const [showCustomModuleModal, setShowCustomModuleModal] = useState(false);
+  const [customModuleData, setCustomModuleData] = useState({ outletId: null, modules: {} });
+  const [savingCustomModules, setSavingCustomModules] = useState(false);
 
   // Multi-step Restaurant Onboarding Wizard state
   const [showOnboardModal, setShowOnboardModal] = useState(false);
@@ -199,16 +292,20 @@ export default function FoodiesDashboard() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [r, o, s, gf] = await Promise.all([
+      const [r, o, s, gf, sp, mp] = await Promise.all([
         foodieFetch("/admin/restaurants"),
         foodieFetch("/admin/outlets"),
         foodieFetch("/admin/stats"),
         foodieFetch("/admin/feature-flags").catch(() => []),
+        foodieFetch("/admin/subscription-packs").catch(() => []),
+        foodieFetch("/admin/module-pricing").catch(() => []),
       ]);
       setRestaurants(Array.isArray(r) ? r : []);
       setOutlets(Array.isArray(o) ? o : []);
       setStats(s || null);
       setGlobalFlags(Array.isArray(gf) ? gf : []);
+      setSubscriptionPacks(Array.isArray(sp) ? sp : []);
+      setModulePricing(Array.isArray(mp) ? mp : []);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -218,7 +315,7 @@ export default function FoodiesDashboard() {
 
   const handleLogout = () => {
     logout();
-    navigate("/admin/foodies/login", { replace: true });
+    navigate(getAdminRoute("/foodies/login"), { replace: true });
   };
 
   /* ── Feature flag editing ── */
@@ -244,6 +341,92 @@ export default function FoodiesDashboard() {
       alert("Failed to save: " + err.message);
     } finally {
       setSavingFlags(false);
+    }
+  };
+
+  const handleAssignPack = async (outletId, packId) => {
+    if (packId === "custom") {
+      const o = outlets.find(x => x.id === outletId);
+      setCustomModuleData({ outletId, modules: o?.custom_modules || {} });
+      setShowCustomModuleModal(true);
+      return;
+    }
+    try {
+      setLoading(true);
+      await foodieFetch(`/admin/outlets/${outletId}/pack`, {
+        method: "PATCH",
+        body: JSON.stringify({ pack_id: packId || null, is_custom_subscription: false }),
+      });
+      await loadData();
+    } catch (err) {
+      alert("Failed to assign pack: " + err.message);
+      setLoading(false);
+    }
+  };
+
+  const handleSaveCustomModules = async () => {
+    try {
+      setSavingCustomModules(true);
+      await foodieFetch(`/admin/outlets/${customModuleData.outletId}/pack`, {
+        method: "PATCH",
+        body: JSON.stringify({ is_custom_subscription: true, custom_modules: customModuleData.modules }),
+      });
+      setShowCustomModuleModal(false);
+      await loadData();
+    } catch (err) {
+      alert("Failed to save custom configuration: " + err.message);
+    } finally {
+      setSavingCustomModules(false);
+    }
+  };
+
+  /* ── Subscription Packs CRUD ── */
+  const openPackModal = (pack = null) => {
+    if (pack) {
+      setPackFormData({ ...pack });
+    } else {
+      setPackFormData({
+        id: null, name: "", description: "", price_monthly: 0, price_yearly: 0,
+        has_pos: false, has_whatsapp: false, has_delivery_partner: false, has_ordering_app: false,
+        is_custom: false, max_staff_per_outlet: 5, feature_flags: {}
+      });
+    }
+    setShowPackModal(true);
+  };
+
+  const handleSavePack = async (e) => {
+    e.preventDefault();
+    setSavingPack(true);
+    try {
+      if (packFormData.id) {
+        await foodieFetch(`/admin/subscription-packs/${packFormData.id}`, {
+          method: "PATCH",
+          body: JSON.stringify(packFormData)
+        });
+      } else {
+        await foodieFetch("/admin/subscription-packs", {
+          method: "POST",
+          body: JSON.stringify(packFormData)
+        });
+      }
+      await loadData();
+      setShowPackModal(false);
+    } catch (err) {
+      alert("Failed to save pack: " + err.message);
+    } finally {
+      setSavingPack(false);
+    }
+  };
+
+  const handleDeletePack = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this pack? It will be removed from all outlets using it.")) return;
+    try {
+      setLoading(true);
+      await foodieFetch(`/admin/subscription-packs/${id}`, { method: "DELETE" });
+      await loadData();
+    } catch (err) {
+      alert("Failed to delete pack: " + err.message);
+      setLoading(false);
     }
   };
 
@@ -409,8 +592,18 @@ export default function FoodiesDashboard() {
         status: "active",
         max_outlets: 1,
         max_staff_per_outlet: 5,
-        max_devices_per_outlet: 2,
       };
+
+  const planNames = [...new Set(linkedOutlets.map(o => {
+    if (o.is_custom_subscription) return "Custom";
+    if (o.subscription_packs) {
+      const pack = Array.isArray(o.subscription_packs) ? o.subscription_packs[0] : o.subscription_packs;
+      return pack?.name;
+    }
+    return null;
+  }).filter(name => name))];
+  
+  const displayPlanName = planNames.length === 0 ? "Not Assigned" : planNames.join(" + ");
 
   const filteredOutlets = linkedOutlets.filter((o) => 
     o.name?.toLowerCase().includes(outletQuery.toLowerCase()) ||
@@ -431,7 +624,7 @@ export default function FoodiesDashboard() {
         {/* Brand */}
         <div className="px-6 pt-7 pb-6 border-b border-orange-900/20">
           <button
-            onClick={() => navigate("/admin")}
+            onClick={() => navigate(getAdminRoute("/"))}
             className="flex items-center gap-2 text-slate-400 hover:text-white text-xs mb-4 transition-colors"
           >
             ← Back to products
@@ -636,7 +829,7 @@ export default function FoodiesDashboard() {
                   {currentRest.is_active !== false ? "Active" : "Restricted"}
                 </Badge>
                 <Badge color="orange">
-                  Plan: {sub.plan_id || "starter"}
+                  Plan: {displayPlanName}
                 </Badge>
               </div>
             </div>
@@ -752,16 +945,6 @@ export default function FoodiesDashboard() {
                     </div>
                   </div>
 
-                  {/* Devices Limit */}
-                  <div>
-                    <div className="flex justify-between items-center mb-1 text-xs">
-                      <span className="font-bold text-slate-400">Active Devices Limit</span>
-                      <span className="font-black text-white">{sub.max_devices_per_outlet || 2} per outlet</span>
-                    </div>
-                    <div className="w-full h-1.5 rounded-full bg-white/5 overflow-hidden">
-                      <div className="h-full w-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full" />
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -828,13 +1011,46 @@ export default function FoodiesDashboard() {
                         </div>
                       </div>
 
-                      <div className="mt-4 pt-4 border-t border-white/5 flex justify-end">
-                        <button
-                          onClick={() => openFlagEditor(o.id, "outlet", o.feature_flags || {})}
-                          className="text-[10px] font-bold border border-white/10 hover:border-orange-500/30 text-slate-400 hover:text-orange-300 hover:bg-orange-500/5 px-3 py-1.5 rounded-lg transition-all"
-                        >
-                          🚩 Edit Flags
-                        </button>
+                      <div className="mt-4 pt-4 border-t border-white/5 flex flex-col gap-3">
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Subscription Pack</label>
+                          <div className="flex gap-2 w-full">
+                            <div className="flex-1">
+                              <CustomPackDropdown
+                                value={o.is_custom_subscription ? "custom" : (o.pack_id || "")}
+                                onChange={(val) => handleAssignPack(o.id, val)}
+                                disabled={loading}
+                                options={[
+                                  { value: "", label: "No Pack Assigned (Inherits)" },
+                                  ...subscriptionPacks.filter(p => !p.is_custom).map(p => ({
+                                    value: p.id,
+                                    label: p.name
+                                  })),
+                                  { value: "custom", label: "Custom Configuration" }
+                                ]}
+                              />
+                            </div>
+                            {o.is_custom_subscription && (
+                              <button
+                                onClick={() => {
+                                  setCustomModuleData({ outletId: o.id, modules: o.custom_modules || {} });
+                                  setShowCustomModuleModal(true);
+                                }}
+                                className="text-[10px] bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 px-3 rounded-lg border border-orange-500/30 font-bold whitespace-nowrap transition-colors"
+                              >
+                                Configure
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex justify-end">
+                          <button
+                            onClick={() => openFlagEditor(o.id, "outlet", o.feature_flags || {})}
+                            className="text-[10px] font-bold border border-white/10 hover:border-orange-500/30 text-slate-400 hover:text-orange-300 hover:bg-orange-500/5 px-3 py-1.5 rounded-lg transition-all"
+                          >
+                            🚩 Edit Flags
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
@@ -845,6 +1061,119 @@ export default function FoodiesDashboard() {
                     <p className="text-slate-500 text-xs">
                       {linkedOutlets.length === 0 ? "No active outlets linked to this restaurant." : "No outlets matching your search criteria."}
                     </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ─── SUBSCRIPTION PACKS VIEW ─── */}
+        {activeTab === "subscription-packs" && !loading && (
+          <div className="space-y-6 animate-fade-in">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h1 className="text-3xl font-black text-white">Subscription Packs</h1>
+                <p className="text-slate-400 mt-1">Manage subscription models and pricing to assign to outlets.</p>
+              </div>
+              <button
+                onClick={() => openPackModal()}
+                className="text-xs font-bold bg-gradient-to-r from-orange-500 to-rose-600 hover:from-orange-600 hover:to-rose-700 text-white px-4 py-2.5 rounded-xl transition-all shadow-md flex items-center gap-1.5 self-start sm:self-auto"
+              >
+                ➕ New Pack
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {subscriptionPacks.map((pack) => (
+                <div key={pack.id} className="relative rounded-3xl border border-white/10 bg-[#1a0b05] overflow-hidden flex flex-col group hover:border-orange-500/30 transition-all">
+                  {pack.is_custom && (
+                    <div className="absolute top-0 right-0 bg-rose-500/20 text-rose-300 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-bl-xl border-b border-l border-rose-500/20 z-10">
+                      Custom
+                    </div>
+                  )}
+                  <div className="p-6 pb-4 relative z-0">
+                    <h3 className="text-xl font-black text-white mb-2 group-hover:text-orange-400 transition-colors">{pack.name}</h3>
+                    <p className="text-xs text-slate-400 mb-4 h-8">{pack.description}</p>
+                    <div className="flex items-end gap-2 mb-4">
+                      <span className="text-3xl font-black text-orange-400">₹{pack.price_monthly}</span>
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">/ mo</span>
+                    </div>
+                  </div>
+                  <div className="px-6 py-4 bg-white/[0.02] border-t border-white/5 flex-1 space-y-3 relative z-0">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-2 h-2 rounded-full ${pack.has_pos ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-700'}`} />
+                      <span className={`text-xs font-bold ${pack.has_pos ? 'text-white' : 'text-slate-500 line-through'}`}>Core POS System</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-2 h-2 rounded-full ${pack.has_whatsapp ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-700'}`} />
+                      <span className={`text-xs font-bold ${pack.has_whatsapp ? 'text-white' : 'text-slate-500 line-through'}`}>WhatsApp Integration</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-2 h-2 rounded-full ${pack.has_delivery_partner ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-700'}`} />
+                      <span className={`text-xs font-bold ${pack.has_delivery_partner ? 'text-white' : 'text-slate-500 line-through'}`}>Delivery Aggregators</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-2 h-2 rounded-full ${pack.has_ordering_app ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-700'}`} />
+                      <span className={`text-xs font-bold ${pack.has_ordering_app ? 'text-white' : 'text-slate-500 line-through'}`}>Custom Ordering App</span>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-orange-950/20 border-t border-orange-500/20 text-center relative z-0 flex justify-between items-center">
+                    <p className="text-[10px] font-mono text-orange-300">
+                      {pack.is_custom ? 'Fully Flexible Flags' : `${Object.keys(pack.feature_flags || {}).length} Base Flags Included`}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => openPackModal(pack)} className="text-[10px] font-bold text-orange-400 hover:text-orange-300 bg-orange-500/10 hover:bg-orange-500/20 px-2 py-1 rounded">Edit</button>
+                      <button onClick={() => handleDeletePack(pack.id)} className="text-[10px] font-bold text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 px-2 py-1 rounded">Delete</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {subscriptionPacks.length === 0 && (
+                <div className="col-span-full py-12 text-center border border-dashed border-white/10 rounded-3xl">
+                  <p className="text-slate-500">No subscription packs found.</p>
+                </div>
+              )}
+            </div>
+
+            {/* ── ITEMIZED MODULE PRICING ── */}
+            <div className="pt-8 mt-8 border-t border-white/5 space-y-6">
+              <div>
+                <h3 className="text-xl font-black text-white">Itemized Module Pricing</h3>
+                <p className="text-slate-400 text-xs mt-1">Base monthly pricing for specific modules. These are used to calculate the cost of Custom packs for individual outlets.</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                {modulePricing.map(mp => (
+                  <div key={mp.module_key} className="bg-[#1a0b05] border border-white/10 rounded-2xl p-4 hover:border-orange-500/30 transition-all flex flex-col justify-between">
+                    <div>
+                      <p className="text-[10px] font-bold text-orange-400 uppercase tracking-widest">{mp.module_key}</p>
+                      <h4 className="text-sm font-black text-white mt-1">{mp.name}</h4>
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-white/5 flex items-end justify-between">
+                      <div className="flex items-end gap-1">
+                        <span className="text-xl font-black text-emerald-400">₹{mp.price_monthly}</span>
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">/ mo</span>
+                      </div>
+                      <button 
+                        onClick={() => {
+                          const newPrice = prompt(`Enter new monthly price for ${mp.name} (₹):`, mp.price_monthly);
+                          if (newPrice !== null && !isNaN(newPrice)) {
+                            foodieFetch(`/admin/module-pricing/${mp.module_key}`, {
+                              method: 'PATCH',
+                              body: JSON.stringify({ price_monthly: Number(newPrice) })
+                            }).then(() => loadData());
+                          }
+                        }}
+                        className="text-[10px] font-bold border border-white/10 hover:bg-white/5 px-2.5 py-1.5 rounded-lg text-slate-300 transition-all"
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {modulePricing.length === 0 && (
+                  <div className="col-span-full py-6 text-center border border-dashed border-white/10 rounded-2xl">
+                    <p className="text-slate-500 text-xs">No itemized pricing found.</p>
                   </div>
                 )}
               </div>
@@ -1674,6 +2003,190 @@ export default function FoodiesDashboard() {
                   </button>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── SUBSCRIPTION PACK MODAL ─── */}
+      {showPackModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div 
+            onClick={() => { if (!savingPack) setShowPackModal(false); }}
+            className="absolute inset-0 bg-black/70 backdrop-blur-md"
+          />
+          <div className="relative bg-[#140600] border border-orange-500/20 shadow-2xl rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-orange-950/45 bg-orange-950/10 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-black text-white mt-1">
+                  {packFormData.id ? "Edit Subscription Pack" : "Create New Pack"}
+                </h3>
+              </div>
+              <button
+                disabled={savingPack}
+                onClick={() => setShowPackModal(false)}
+                className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all disabled:opacity-50"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <form onSubmit={handleSavePack} className="flex-1 overflow-y-auto p-6 space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Pack Name *</label>
+                  <input required type="text" value={packFormData.name} onChange={e => setPackFormData({...packFormData, name: e.target.value})} className="w-full text-xs bg-white/[0.03] border border-white/[0.08] focus:border-orange-500/40 rounded-lg px-3 py-2 text-white outline-none" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Monthly Price (₹) *</label>
+                  <input required type="number" value={packFormData.price_monthly} onChange={e => setPackFormData({...packFormData, price_monthly: Number(e.target.value)})} className="w-full text-xs bg-white/[0.03] border border-white/[0.08] focus:border-orange-500/40 rounded-lg px-3 py-2 text-white outline-none" />
+                </div>
+              </div>
+              
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Description</label>
+                <textarea value={packFormData.description} onChange={e => setPackFormData({...packFormData, description: e.target.value})} className="w-full text-xs bg-white/[0.03] border border-white/[0.08] focus:border-orange-500/40 rounded-lg px-3 py-2 text-white outline-none h-16 resize-none" />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-white/5 mt-4">
+                <div className="flex items-center gap-3">
+                  <ToggleFlag checked={packFormData.is_custom} onChange={() => setPackFormData({...packFormData, is_custom: !packFormData.is_custom})} />
+                  <span className="text-xs font-bold text-slate-300">Is Custom Pack</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <ToggleFlag checked={packFormData.has_pos} onChange={() => setPackFormData({...packFormData, has_pos: !packFormData.has_pos})} />
+                  <span className="text-xs font-bold text-slate-300">Core POS Included</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <ToggleFlag checked={packFormData.has_whatsapp} onChange={() => setPackFormData({...packFormData, has_whatsapp: !packFormData.has_whatsapp})} />
+                  <span className="text-xs font-bold text-slate-300">WhatsApp Integration</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <ToggleFlag checked={packFormData.has_delivery_partner} onChange={() => setPackFormData({...packFormData, has_delivery_partner: !packFormData.has_delivery_partner})} />
+                  <span className="text-xs font-bold text-slate-300">Delivery Aggregators</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <ToggleFlag checked={packFormData.has_ordering_app} onChange={() => setPackFormData({...packFormData, has_ordering_app: !packFormData.has_ordering_app})} />
+                  <span className="text-xs font-bold text-slate-300">Ordering App</span>
+                </div>
+              </div>
+              <div className="pt-4 border-t border-white/5 mt-4">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-3">Included Feature Flags</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-3 gap-x-4">
+                  {FLAG_KEYS.map(key => {
+                    const isOn = packFormData.feature_flags?.[key] !== false;
+                    return (
+                      <div key={key} className="flex items-center gap-3">
+                        <ToggleFlag 
+                          checked={isOn} 
+                          onChange={() => setPackFormData({
+                            ...packFormData, 
+                            feature_flags: { ...packFormData.feature_flags, [key]: !isOn }
+                          })} 
+                        />
+                        <span className="text-[11px] font-medium text-slate-300 capitalize truncate">{flagLabel(key)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              <div className="bg-orange-500/10 border border-orange-500/20 p-4 rounded-xl mt-4">
+                <p className="text-xs text-orange-200">For "Custom" packs, assigning the pack to an outlet unlocks manual feature flag control for that outlet. For standard packs, assigning the pack automatically locks and overwrites the outlet's flags with the pack's defaults.</p>
+              </div>
+            </form>
+
+            <div className="p-6 bg-orange-950/10 border-t border-orange-950/45 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowPackModal(false)}
+                className="px-5 py-2.5 border border-white/10 hover:bg-white/5 text-slate-300 hover:text-white font-bold rounded-xl transition-all text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSavePack}
+                disabled={savingPack}
+                className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-rose-600 hover:from-orange-600 hover:to-rose-700 text-white font-black rounded-xl disabled:opacity-50 transition-all text-xs"
+              >
+                {savingPack ? "Saving…" : "Save Pack"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ─── CUSTOM MODULE MODAL ─── */}
+      {showCustomModuleModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div 
+            onClick={() => {
+              if (savingCustomModules) return;
+              setShowCustomModuleModal(false);
+            }}
+            className="absolute inset-0 bg-black/70 backdrop-blur-md"
+          />
+          <div className="relative bg-[#140600] border border-orange-500/20 shadow-2xl rounded-3xl w-full max-w-lg overflow-hidden flex flex-col transition-all duration-300">
+            <div className="p-6 border-b border-orange-950/45 bg-orange-950/10 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-black text-white">Custom Outlet Modules</h3>
+                <p className="text-xs text-slate-400 mt-0.5">Select modules and feature packs for this outlet.</p>
+              </div>
+              <button
+                disabled={savingCustomModules}
+                onClick={() => setShowCustomModuleModal(false)}
+                className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all disabled:opacity-50"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-1 gap-3">
+                {modulePricing.map(mp => {
+                  const isOn = customModuleData.modules[mp.module_key] === true;
+                  return (
+                    <div key={mp.module_key} className={`flex items-center justify-between p-4 rounded-xl border transition-all ${isOn ? 'bg-orange-500/10 border-orange-500/30' : 'bg-white/[0.02] border-white/5'}`}>
+                      <div>
+                        <h4 className="text-sm font-bold text-white">{mp.name}</h4>
+                        <p className="text-xs text-slate-400">₹{mp.price_monthly}/mo</p>
+                      </div>
+                      <ToggleFlag 
+                        checked={isOn} 
+                        onChange={() => {
+                          setCustomModuleData(prev => ({
+                            ...prev, 
+                            modules: { ...prev.modules, [mp.module_key]: !isOn }
+                          }));
+                        }} 
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+              
+              <div className="bg-orange-950/20 border border-orange-500/20 rounded-xl p-4 flex justify-between items-center mt-4">
+                <span className="text-sm font-bold text-slate-300">Total Monthly Cost:</span>
+                <span className="text-2xl font-black text-orange-400">
+                  ₹{modulePricing.filter(mp => customModuleData.modules[mp.module_key]).reduce((acc, mp) => acc + Number(mp.price_monthly), 0)}
+                </span>
+              </div>
+            </div>
+
+            <div className="p-6 bg-orange-950/10 border-t border-orange-950/45 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowCustomModuleModal(false)}
+                className="px-5 py-2.5 border border-white/10 hover:bg-white/5 text-slate-300 hover:text-white font-bold rounded-xl transition-all text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveCustomModules}
+                disabled={savingCustomModules}
+                className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-rose-600 hover:from-orange-600 hover:to-rose-700 text-white font-black rounded-xl disabled:opacity-50 transition-all text-xs"
+              >
+                {savingCustomModules ? "Saving…" : "Save Custom Plan"}
+              </button>
             </div>
           </div>
         </div>

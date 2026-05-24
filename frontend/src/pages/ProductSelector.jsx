@@ -1,5 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { getAdminRoute } from "@/lib/routes";
 
 /* ────────────────────────────────────────────
    ProductSelector — Choose which admin panel to enter.
@@ -11,7 +13,7 @@ const products = [
     id: "sbdevstudio",
     label: "SB Dev Studio",
     description: "Manage portfolio projects, client testimonials, and contact enquiries for the agency website.",
-    href: "/admin/sbdevstudio/login",
+    href: getAdminRoute("/sbdevstudio/login"),
     gradient: "from-cyan-500 via-blue-600 to-fuchsia-600",
     glow: "shadow-cyan-500/30",
     border: "border-cyan-500/30",
@@ -30,7 +32,7 @@ const products = [
     id: "foodies",
     label: "Foodies POS",
     description: "Monitor restaurants, manage outlets, view subscriptions, and control feature flags across the Foodies platform.",
-    href: "/admin/foodies/login",
+    href: getAdminRoute("/foodies/login"),
     gradient: "from-orange-500 via-rose-500 to-pink-600",
     glow: "shadow-orange-500/30",
     border: "border-orange-500/30",
