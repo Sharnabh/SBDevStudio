@@ -251,7 +251,7 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {statItems.map((item) => (
             <Card key={item.label} className={`${gradientCard} border border-cyan-500/30`}>
               <CardHeader className="pb-2">
@@ -262,7 +262,7 @@ const AdminDashboard = () => {
           ))}
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className={gradientCard}>
             <CardHeader>
               <CardTitle>{editingProject ? "Edit Project" : "Create Project"}</CardTitle>
@@ -282,7 +282,7 @@ const AdminDashboard = () => {
                   onChange={(e) => setProjectForm((f) => ({ ...f, description: e.target.value }))}
                   className="bg-white/5 border-cyan-500/20 text-white"
                 />
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Input
                     placeholder="Category"
                     list="project-categories"
@@ -302,7 +302,7 @@ const AdminDashboard = () => {
                     <option key={c} value={c} />
                   ))}
                 </datalist>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Input
                     placeholder="Image URL"
                     value={projectForm.image}
@@ -346,7 +346,7 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <form className="space-y-3" onSubmit={handleTestimonialSubmit}>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Input
                     placeholder="Name"
                     value={testimonialForm.name}
@@ -366,7 +366,7 @@ const AdminDashboard = () => {
                   onChange={(e) => setTestimonialForm((f) => ({ ...f, content: e.target.value }))}
                   className="bg-white/5 border-cyan-500/20 text-white"
                 />
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Input
                     type="number"
                     min={1}
@@ -407,7 +407,7 @@ const AdminDashboard = () => {
           </Card>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className={gradientCard}>
             <CardHeader>
               <CardTitle>Projects</CardTitle>

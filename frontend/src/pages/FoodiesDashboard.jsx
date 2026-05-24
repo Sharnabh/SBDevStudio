@@ -618,9 +618,9 @@ export default function FoodiesDashboard() {
      RENDER
   ══════════════════════════════════════════════════════════ */
   return (
-    <div className="min-h-screen bg-[#0e0500] text-white flex">
-      {/* ── Sidebar ── */}
-      <aside className="w-60 flex-shrink-0 bg-[#160800] border-r border-orange-900/30 flex flex-col">
+    <div className="min-h-screen bg-[#0e0500] text-white flex flex-col md:flex-row">
+      {/* ── Sidebar (Hidden on mobile) ── */}
+      <aside className="hidden md:flex w-60 flex-shrink-0 bg-[#160800] border-r border-orange-900/30 flex-col">
         {/* Brand */}
         <div className="px-6 pt-7 pb-6 border-b border-orange-900/20">
           <button
@@ -672,8 +672,8 @@ export default function FoodiesDashboard() {
         </div>
       </aside>
 
-      {/* ── Main content ── */}
-      <main className="flex-1 overflow-y-auto px-8 py-8">
+      {/* ── Main Content ── */}
+      <main className="flex-1 overflow-y-auto px-4 md:px-8 py-6 md:py-8 pb-24 md:pb-8">
         {loading && (
           <div className="flex items-center justify-center h-64">
             <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
@@ -1370,6 +1370,34 @@ export default function FoodiesDashboard() {
           </div>
         )}
       </main>
+
+      {/* ── Mobile Bottom Tab Bar ── */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#160800]/90 backdrop-blur-md border-t border-orange-900/30 flex justify-around items-center px-2 py-3 z-50">
+        {NAV.map((item) => {
+          const isActive = activeTab === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => {
+                setActiveTab(item.id);
+                setSearchParams({});
+              }}
+              className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
+                isActive
+                  ? "text-orange-400"
+                  : "text-slate-500 hover:text-slate-300"
+              }`}
+            >
+              <item.icon
+                className={`w-5 h-5 ${
+                  isActive ? "text-orange-500" : "text-slate-500"
+                }`}
+              />
+              <span className="text-[10px] font-medium">{item.label}</span>
+            </button>
+          );
+        })}
+      </div>
 
       {/* ─── SLIDING FEATURE FLAGS DRAWER ─── */}
       <div className={`fixed inset-0 z-50 transition-all duration-300 ${editingFlags.id ? "pointer-events-auto" : "pointer-events-none"}`}>
