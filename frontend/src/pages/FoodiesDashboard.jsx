@@ -46,11 +46,7 @@ import { getAdminRoute } from "@/lib/routes";
 // Mirrors the URL resolution logic in foodie-frontend/src/lib/api.ts:
 // Uses the same hostname as the browser, but always points to port 3001.
 // Override with REACT_APP_FOODIE_API in .env if needed (e.g. for production).
-const FOODIE_API =
-  process.env.REACT_APP_FOODIE_API ||
-  (typeof window !== "undefined"
-    ? `${window.location.protocol}//${window.location.hostname}:3001`
-    : "http://localhost:3001");
+const FOODIE_API = process.env.REACT_APP_FOODIE_API || "https://api.foodies.sbdevstudio.in";
 
 // Foodies backend uses its own JWT stored by useFoodiesAuth.
 async function foodieFetch(endpoint, options = {}) {

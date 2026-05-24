@@ -12,11 +12,7 @@ import { getAdminRoute } from "@/lib/routes";
    backend on port 3001 using email + password.
    ──────────────────────────────────────────── */
 
-const FOODIE_API =
-  process.env.REACT_APP_FOODIE_API ||
-  (typeof window !== "undefined"
-    ? `${window.location.protocol}//${window.location.hostname}:3001`
-    : "http://localhost:3001");
+const FOODIE_API = process.env.REACT_APP_FOODIE_API || "https://api.foodies.sbdevstudio.in";
 
 export default function FoodiesLogin() {
   const navigate = useNavigate();
