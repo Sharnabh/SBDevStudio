@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import ProductSelector from './pages/ProductSelector';
@@ -31,8 +31,18 @@ const RequireFoodiesAuth = ({ children }) => {
   return children;
 };
 
+/* ── External Redirect Component ── */
+const RedirectToAdminSubdomain = () => {
+  useEffect(() => {
+    const newPath = window.location.pathname.replace('/admin', '');
+    window.location.href = `https://admin.sbdevstudio.in${newPath}`;
+  }, []);
+  return null;
+};
+
 function App() {
   const isSubdomain = isAdminDomain();
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
   return (
     <div className="App">
@@ -68,29 +78,37 @@ function App() {
             </>
           )}
 
-          {/* Legacy /admin Routes (Fallback for main site and local dev) */}
-          <Route path="/admin" element={<ProductSelector />} />
-          <Route path="/admin/sbdevstudio/login" element={<AdminLogin />} />
-          <Route
-            path="/admin/sbdevstudio"
-            element={
-              <RequireSBDevAuth>
-                <AdminDashboard />
-              </RequireSBDevAuth>
-            }
-          />
-          <Route path="/admin/foodies/login" element={<FoodiesLogin />} />
-          <Route
-            path="/admin/foodies"
-            element={
-              <RequireFoodiesAuth>
-                <FoodiesDashboard />
-              </RequireFoodiesAuth>
-            }
-          />
+          {/* Local Dev ONLY: Fallback legacy /admin Routes */}
+          {isLocalhost && !isSubdomain && (
+            <>
+              <Route path="/admin" element={<ProductSelector />} />
+              <Route path="/admin/sbdevstudio/login" element={<AdminLogin />} />
+              <Route
+                path="/admin/sbdevstudio"
+                element={
+                  <RequireSBDevAuth>
+                    <AdminDashboard />
+                  </RequireSBDevAuth>
+                }
+              />
+              <Route path="/admin/foodies/login" element={<FoodiesLogin />} />
+              <Route
+                path="/admin/foodies"
+                element={
+                  <RequireFoodiesAuth>
+                    <FoodiesDashboard />
+                  </RequireFoodiesAuth>
+                }
+              />
+              <Route path="/admin/login" element={<Navigate to="/admin" replace />} />
+            </>
+          )}
 
-          {/* Legacy redirect */}
-          <Route path="/admin/login" element={<Navigate to="/admin" replace />} />
+          {/* Public Site ONLY: Redirect old /admin bookmarks to the new subdomain */}
+          {!isLocalhost && !isSubdomain && (
+            <Route path="/admin/*" element={<RedirectToAdminSubdomain />} />
+          )}
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
