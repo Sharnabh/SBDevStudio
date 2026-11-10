@@ -1,8 +1,8 @@
 import axios from "axios";
 import { getStoredToken } from "@/hooks/useAuth";
 
-// Default to local dev API; override in env (e.g., REACT_APP_API_BASE=hhttps://api.sbdevstudio.in/api)
-const API_BASE = process.env.REACT_APP_API_BASE || "https://api.sbdevstudio.in/api";
+// Default to production Render API; override in env (e.g., REACT_APP_API_BASE=http://localhost:8000/api)
+const API_BASE = process.env.REACT_APP_API_BASE || "https://sbdevstudio-1.onrender.com/api";
 
 export const api = axios.create({
   baseURL: API_BASE,
