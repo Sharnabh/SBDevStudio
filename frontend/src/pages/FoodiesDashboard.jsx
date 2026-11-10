@@ -1189,6 +1189,64 @@ export default function FoodiesDashboard() {
               </button>
             </div>
 
+            {/* ── Pinned: Delivery Feature Flag ── */}
+            {(() => {
+              const deliveryFlag = globalFlags.find(f => f.feature_key === 'delivery_enabled');
+              const isDeliveryOn = deliveryFlag ? deliveryFlag.is_enabled : true;
+              return (
+                <div className={`rounded-2xl border p-5 transition-all ${isDeliveryOn ? 'bg-emerald-500/5 border-emerald-500/25' : 'bg-rose-500/5 border-rose-500/25'}`}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-4">
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 ${isDeliveryOn ? 'bg-emerald-500/15' : 'bg-rose-500/15'}`}>
+                        🚴
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="text-sm font-black text-white">Delivery Feature</p>
+                          <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${isDeliveryOn ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' : 'bg-rose-500/15 text-rose-300 border-rose-500/30'}`}>
+                            {isDeliveryOn ? 'Enabled' : 'Disabled'}
+                          </span>
+                          <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-300 border border-orange-500/30">📌 Pinned</span>
+                        </div>
+                        <p className="text-xs text-slate-400 leading-relaxed max-w-lg">
+                          Controls all delivery-related UI in the customer app — delivery toggles in cart, delivery badges on outlet cards, delivery fee rows, and promo banners. Turn OFF when delivery is not yet available.
+                        </p>
+                        <p className="text-[10px] text-slate-600 mt-1.5 font-mono">feature_key: delivery_enabled</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                      <ToggleFlag
+                        checked={isDeliveryOn}
+                        onChange={async () => {
+                          if (deliveryFlag) {
+                            await handleToggleGlobalFlag(deliveryFlag.id, isDeliveryOn);
+                          } else {
+                            // Create the flag if it doesn't exist yet
+                            try {
+                              const created = await foodieFetch("/admin/feature-flags", {
+                                method: "POST",
+                                body: JSON.stringify({
+                                  feature_key: "delivery_enabled",
+                                  is_enabled: false,
+                                  description: "Controls all delivery UI in the customer ordering app.",
+                                }),
+                              });
+                              setGlobalFlags(prev => [...prev, created].sort((a, b) => a.feature_key.localeCompare(b.feature_key)));
+                            } catch (err) {
+                              alert("Failed to create flag: " + err.message);
+                            }
+                          }
+                        }}
+                      />
+                      <span className={`text-[10px] font-bold ${isDeliveryOn ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {isDeliveryOn ? 'ON' : 'OFF'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Create form */}
             {showAddForm && (
               <form onSubmit={handleCreateGlobalFlag} className="rounded-2xl border border-orange-500/20 bg-orange-500/[0.02] p-5 space-y-4 animate-fade-in max-w-xl">

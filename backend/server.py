@@ -1,24 +1,21 @@
-from fastapi import FastAPI, APIRouter, BackgroundTasks
+from fastapi import FastAPI, APIRouter, BackgroundTasks, Depends
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from models import Testimonial, Contact, ContactCreate
+from typing import List
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
+
+from models import Testimonial, Contact, ContactCreate, AdminUser
+from database import init_db, get_session, async_session_maker
 from mailer import send_contact_notification
 from auth import get_password_hash
-from typing import List
-
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
-
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
 
 # Create the main app without a prefix
 app = FastAPI(title="SB Dev Studio API", version="1.0.0")
@@ -35,24 +32,31 @@ app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 from routes.public import router as public_router
 from routes.admin import router as admin_router
 
-# Basic routes
+# Health & Info check (Used by UptimeRobot)
 @api_router.get("/")
 async def root():
-    return {"message": "SB Dev Studio API", "version": "1.0.0"}
+    return {"message": "SB Dev Studio API", "version": "1.0.0", "status": "healthy"}
 
 # Public routes
 @api_router.get("/testimonials", response_model=List[Testimonial])
-async def get_testimonials():
+async def get_testimonials(session: AsyncSession = Depends(get_session)):
     """Get all testimonials."""
-    testimonials = await db.testimonials.find().sort("created_at", -1).to_list(100)
-    return [Testimonial(**testimonial) for testimonial in testimonials]
+    statement = select(Testimonial).order_by(Testimonial.created_at.desc())
+    result = await session.exec(statement)
+    return result.all()
 
 @api_router.post("/contact", response_model=Contact)
-async def submit_contact(contact_data: ContactCreate, background_tasks: BackgroundTasks):
+async def submit_contact(
+    contact_data: ContactCreate,
+    background_tasks: BackgroundTasks,
+    session: AsyncSession = Depends(get_session)
+):
     """Submit a contact form."""
     contact = Contact(**contact_data.dict())
-    await db.contacts.insert_one(contact.dict())
-    # Fire-and-forget email notification if SMTP is configured
+    session.add(contact)
+    await session.commit()
+    await session.refresh(contact)
+    # Fire-and-forget email notification via Resend
     background_tasks.add_task(send_contact_notification, contact.dict())
     return contact
 
@@ -78,20 +82,24 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
 @app.on_event("startup")
 async def startup_event():
-    """Initialize database with default admin if not exists."""
-    admin_exists = await db.admins.find_one({"username": "admin"})
-    if not admin_exists:
-        from models import AdminUser
-        default_admin = AdminUser(
-            username="admin",
-            email="admin@sbdevstudio.com",
-            password_hash=get_password_hash("Admin@123")
-        )
-        await db.admins.insert_one(default_admin.dict())
-        logger.info("Default admin user created: username='admin', password='Admin@123'")
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()
+    """Initialize Supabase Postgres tables and default admin if not exists."""
+    try:
+        await init_db()
+        async with async_session_maker() as session:
+            statement = select(AdminUser).where(AdminUser.username == "admin")
+            result = await session.exec(statement)
+            admin_exists = result.first()
+            if not admin_exists:
+                default_admin = AdminUser(
+                    username="admin",
+                    email="admin@sbdevstudio.com",
+                    password_hash=get_password_hash("Admin@123")
+                )
+                session.add(default_admin)
+                await session.commit()
+                logger.info("Default admin user created: username='admin', password='Admin@123'")
+    except Exception as exc:
+        logger.error("Database startup initialization error: %s", exc)
