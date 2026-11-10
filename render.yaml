@@ -15,7 +15,7 @@ services:
       - key: RESEND_API_KEY
         sync: false
       - key: RESEND_FROM
-        value: onboarding@resend.dev
+        value: SB Dev Studio <support@sbdevstudio.in>
       - key: NOTIFY_TO
         sync: false
 
