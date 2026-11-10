@@ -21,7 +21,18 @@ import {
   updateProject,
   updateTestimonial,
   uploadImage,
+  fetchAdminList,
+  createAdminUser,
+  changeAdminPassword,
 } from "@/lib/api";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Users, KeyRound, UserPlus, ShieldCheck } from "lucide-react";
 
 const gradientCard = "border-cyan-500/20 bg-gradient-to-br from-[#0b1a2f] via-[#0c223f] to-[#0b1a2f] text-white shadow-xl shadow-cyan-500/10";
 
@@ -54,6 +65,17 @@ const AdminDashboard = () => {
     avatar: "",
   });
   const [editingTestimonial, setEditingTestimonial] = useState(null);
+
+  // Admin Management & Password Change State
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+  const [adminList, setAdminList] = useState([]);
+  const [adminListLoading, setAdminListLoading] = useState(false);
+  const [newAdminForm, setNewAdminForm] = useState({ username: "", email: "", password: "" });
+  const [isCreatingAdmin, setIsCreatingAdmin] = useState(false);
+
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({ current_password: "", new_password: "", confirm_password: "" });
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const categoryOptions = useMemo(() => [
     "Web Development",
@@ -228,6 +250,74 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleOpenAdminModal = async () => {
+    setIsAdminModalOpen(true);
+    setAdminListLoading(true);
+    try {
+      const data = await fetchAdminList();
+      setAdminList(Array.isArray(data) ? data : []);
+    } catch (error) {
+      toast({ title: "Error", description: "Could not load admin accounts.", variant: "destructive" });
+    } finally {
+      setAdminListLoading(false);
+    }
+  };
+
+  const handleCreateAdmin = async (e) => {
+    e.preventDefault();
+    if (!newAdminForm.username || !newAdminForm.email || !newAdminForm.password) {
+      toast({ title: "Missing fields", description: "Please fill out all admin fields." });
+      return;
+    }
+    if (newAdminForm.password.length < 6) {
+      toast({ title: "Password too short", description: "Password must be at least 6 characters." });
+      return;
+    }
+    setIsCreatingAdmin(true);
+    try {
+      const created = await createAdminUser(newAdminForm);
+      setAdminList((prev) => [created, ...prev]);
+      setNewAdminForm({ username: "", email: "", password: "" });
+      toast({ title: "Admin Created", description: `Admin account '${created.username}' created successfully.` });
+    } catch (error) {
+      const msg = error?.response?.data?.detail || "Could not create admin.";
+      toast({ title: "Creation Failed", description: msg, variant: "destructive" });
+    } finally {
+      setIsCreatingAdmin(false);
+    }
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (!passwordForm.current_password || !passwordForm.new_password) {
+      toast({ title: "Missing fields", description: "Please enter current and new password." });
+      return;
+    }
+    if (passwordForm.new_password !== passwordForm.confirm_password) {
+      toast({ title: "Passwords Mismatch", description: "New password and confirmation do not match.", variant: "destructive" });
+      return;
+    }
+    if (passwordForm.new_password.length < 6) {
+      toast({ title: "Password too short", description: "New password must be at least 6 characters." });
+      return;
+    }
+    setIsChangingPassword(true);
+    try {
+      await changeAdminPassword({
+        current_password: passwordForm.current_password,
+        new_password: passwordForm.new_password,
+      });
+      toast({ title: "Password Changed", description: "Your admin password has been updated." });
+      setPasswordForm({ current_password: "", new_password: "", confirm_password: "" });
+      setIsPasswordModalOpen(false);
+    } catch (error) {
+      const msg = error?.response?.data?.detail || "Could not change password.";
+      toast({ title: "Change Failed", description: msg, variant: "destructive" });
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
   const statItems = stats
     ? [
         { label: "Projects", value: stats.total_projects },
@@ -245,7 +335,23 @@ const AdminDashboard = () => {
             <p className="text-sm text-cyan-300/80">SB Dev Studio Admin</p>
             <h1 className="text-3xl font-semibold">Control Center</h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              className="border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 flex items-center space-x-1.5"
+              onClick={handleOpenAdminModal}
+            >
+              <Users className="w-4 h-4 mr-1.5" />
+              <span>Admins</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 flex items-center space-x-1.5"
+              onClick={() => setIsPasswordModalOpen(true)}
+            >
+              <KeyRound className="w-4 h-4 mr-1.5" />
+              <span>Change Password</span>
+            </Button>
             <Button variant="outline" className="border-cyan-400/40 text-cyan-200" onClick={() => window.open("http://localhost:3000", "_blank")}>View site</Button>
             <Button variant="secondary" className="bg-white/10 border border-cyan-400/40" onClick={handleLogout}>Sign out</Button>
           </div>
@@ -508,6 +614,170 @@ const AdminDashboard = () => {
             ))}
           </CardContent>
         </Card>
+
+        {/* Manage Admins Dialog */}
+        <Dialog open={isAdminModalOpen} onOpenChange={setIsAdminModalOpen}>
+          <DialogContent className="bg-[#0B1120] border-slate-800 text-white max-w-xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <div className="flex items-center space-x-2 text-cyan-400 mb-1">
+                <Users className="w-5 h-5" />
+                <DialogTitle className="text-xl font-bold text-white">Admin Accounts</DialogTitle>
+              </div>
+              <DialogDescription className="text-slate-400 text-sm">
+                Create new studio admins and review active administrator permissions.
+              </DialogDescription>
+            </DialogHeader>
+
+            {/* Create Admin Form */}
+            <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800/80 space-y-3 mt-2">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-cyan-300 flex items-center space-x-1.5">
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>Create New Admin</span>
+              </h4>
+              <form onSubmit={handleCreateAdmin} className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[11px] text-slate-300 block mb-1">Username</label>
+                    <Input
+                      required
+                      placeholder="e.g. johndoe"
+                      value={newAdminForm.username}
+                      onChange={(e) => setNewAdminForm((f) => ({ ...f, username: e.target.value }))}
+                      className="bg-slate-950/70 border-slate-700 text-white text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-slate-300 block mb-1">Admin Email</label>
+                    <Input
+                      type="email"
+                      required
+                      placeholder="e.g. john@sbdevstudio.in"
+                      value={newAdminForm.email}
+                      onChange={(e) => setNewAdminForm((f) => ({ ...f, email: e.target.value }))}
+                      className="bg-slate-950/70 border-slate-700 text-white text-xs"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[11px] text-slate-300 block mb-1">Temporary Password (min 6 chars)</label>
+                  <Input
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    value={newAdminForm.password}
+                    onChange={(e) => setNewAdminForm((f) => ({ ...f, password: e.target.value }))}
+                    className="bg-slate-950/70 border-slate-700 text-white text-xs"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  disabled={isCreatingAdmin}
+                  className="w-full btn-primary text-xs py-2 font-medium"
+                >
+                  {isCreatingAdmin ? "Creating Admin..." : "Add Administrator"}
+                </Button>
+              </form>
+            </div>
+
+            {/* Existing Admins List */}
+            <div className="space-y-2 mt-4">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Current Administrators ({adminList.length})
+              </h4>
+              {adminListLoading ? (
+                <p className="text-xs text-slate-400 py-2">Loading administrators...</p>
+              ) : (
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {adminList.map((admin) => (
+                    <div
+                      key={admin.id}
+                      className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-800 text-xs"
+                    >
+                      <div>
+                        <p className="font-semibold text-white">{admin.username}</p>
+                        <p className="text-slate-400 text-[11px]">{admin.email}</p>
+                      </div>
+                      <span className="text-[10px] text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-full font-medium">
+                        Active
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Change Password Dialog */}
+        <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>
+          <DialogContent className="bg-[#0B1120] border-slate-800 text-white max-w-md">
+            <DialogHeader>
+              <div className="flex items-center space-x-2 text-cyan-400 mb-1">
+                <KeyRound className="w-5 h-5" />
+                <DialogTitle className="text-xl font-bold text-white">Change Password</DialogTitle>
+              </div>
+              <DialogDescription className="text-slate-400 text-sm">
+                Update your administrator account password.
+              </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleChangePassword} className="space-y-3.5 mt-2">
+              <div>
+                <label className="text-xs text-slate-300 block mb-1">Current Password</label>
+                <Input
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  value={passwordForm.current_password}
+                  onChange={(e) => setPasswordForm((f) => ({ ...f, current_password: e.target.value }))}
+                  className="bg-slate-900 border-slate-700 text-white text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-slate-300 block mb-1">New Password (min 6 chars)</label>
+                <Input
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  value={passwordForm.new_password}
+                  onChange={(e) => setPasswordForm((f) => ({ ...f, new_password: e.target.value }))}
+                  className="bg-slate-900 border-slate-700 text-white text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-slate-300 block mb-1">Confirm New Password</label>
+                <Input
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  value={passwordForm.confirm_password}
+                  onChange={(e) => setPasswordForm((f) => ({ ...f, confirm_password: e.target.value }))}
+                  className="bg-slate-900 border-slate-700 text-white text-xs"
+                />
+              </div>
+
+              <div className="flex items-center justify-end space-x-2 pt-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="bg-white/5 border border-slate-700 text-xs text-slate-300"
+                  onClick={() => setIsPasswordModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isChangingPassword}
+                  className="btn-primary text-xs py-2 font-medium"
+                >
+                  {isChangingPassword ? "Updating..." : "Update Password"}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

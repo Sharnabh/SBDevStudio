@@ -77,7 +77,7 @@ class ContactStatusUpdate(SQLModel):
 # --- Admin User Models ---
 class AdminUserBase(SQLModel):
     username: str = Field(unique=True, index=True)
-    email: str
+    email: str = Field(index=True)
 
 
 class AdminUserCreate(AdminUserBase):
@@ -92,9 +92,46 @@ class AdminUser(AdminUserBase, table=True):
     created_at: datetime = Field(default_factory=utc_now)
 
 
+class AdminOTP(SQLModel, table=True):
+    __tablename__ = "admin_otps"
+
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
+    email: str = Field(index=True)
+    otp_code: str
+    expires_at: datetime
+    created_at: datetime = Field(default_factory=utc_now)
+
+
 class AdminLogin(SQLModel):
-    username: str
+    email: str
     password: str
+
+
+class AdminOTPVerifyRequest(SQLModel):
+    email: str
+    otp_code: str
+
+
+class AdminResendOTPRequest(SQLModel):
+    email: str
+
+
+class AdminCreateRequest(SQLModel):
+    username: str
+    email: str
+    password: str
+
+
+class AdminChangePasswordRequest(SQLModel):
+    current_password: str
+    new_password: str
+
+
+class AdminUserResponse(SQLModel):
+    id: str
+    username: str
+    email: str
+    created_at: datetime
 
 
 class Token(SQLModel):

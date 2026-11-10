@@ -92,14 +92,20 @@ async def startup_event():
             statement = select(AdminUser).where(AdminUser.username == "admin")
             result = await session.exec(statement)
             admin_exists = result.first()
+            admin_email = os.getenv("NOTIFY_TO") or "sbdevstudio1@gmail.com"
             if not admin_exists:
                 default_admin = AdminUser(
                     username="admin",
-                    email="admin@sbdevstudio.com",
+                    email=admin_email,
                     password_hash=get_password_hash("Admin@123")
                 )
                 session.add(default_admin)
                 await session.commit()
-                logger.info("Default admin user created: username='admin', password='Admin@123'")
+                logger.info("Default admin user created: email='%s', password='Admin@123'", admin_email)
+            elif admin_exists.email == "admin@sbdevstudio.com":
+                admin_exists.email = admin_email
+                session.add(admin_exists)
+                await session.commit()
+                logger.info("Updated default admin email to '%s'", admin_email)
     except Exception as exc:
         logger.error("Database startup initialization error: %s", exc)

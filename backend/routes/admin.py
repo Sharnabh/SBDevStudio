@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends
-from typing import List
-from datetime import timedelta
+import secrets
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends, BackgroundTasks
+from typing import List, Dict, Any
+from datetime import datetime, timezone, timedelta
 from sqlmodel import select, func
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -9,6 +10,8 @@ from models import (
     Testimonial, TestimonialCreate,
     Contact, ContactStatusUpdate,
     AdminLogin, Token, AdminUserCreate, AdminUser,
+    AdminOTP, AdminOTPVerifyRequest, AdminResendOTPRequest,
+    AdminCreateRequest, AdminChangePasswordRequest, AdminUserResponse,
     FileUploadResponse
 )
 from auth import (
@@ -16,52 +19,216 @@ from auth import (
 )
 from file_handler import save_upload_file, delete_file
 from database import get_session
+from mailer import send_otp_email
 
 router = APIRouter()
 
 
-# --- Authentication Routes ---
-@router.post("/admin/login", response_model=Token)
+# --- Authentication & 2FA Routes ---
+@router.post("/admin/login")
 async def admin_login(
     credentials: AdminLogin,
+    background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_session)
 ):
-    """Admin login endpoint."""
-    statement = select(AdminUser).where(AdminUser.username == credentials.username)
+    """Step 1 of Admin Login: Verify email/password and dispatch 2FA OTP."""
+    email_clean = credentials.email.strip().lower()
+    statement = select(AdminUser).where(
+        (func.lower(AdminUser.email) == email_clean) |
+        (func.lower(AdminUser.username) == email_clean)
+    )
     result = await session.exec(statement)
     admin = result.first()
     
     if not admin or not verify_password(credentials.password, admin.password_hash):
-        raise HTTPException(status_code=401, detail="Incorrect username or password")
+        raise HTTPException(status_code=401, detail="Incorrect email or password")
     
+    # Generate secure 6-digit OTP
+    otp_code = f"{secrets.randbelow(900000) + 100000}"
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
+
+    # Clean previous OTPs for this admin's email
+    existing_otps = (await session.exec(
+        select(AdminOTP).where(func.lower(AdminOTP.email) == admin.email.lower())
+    )).all()
+    for item in existing_otps:
+        await session.delete(item)
+
+    # Store new OTP record
+    new_otp = AdminOTP(
+        email=admin.email.lower(),
+        otp_code=otp_code,
+        expires_at=expires_at
+    )
+    session.add(new_otp)
+    await session.commit()
+
+    # Dispatch OTP email in background
+    background_tasks.add_task(send_otp_email, admin.email, otp_code)
+
+    return {
+        "require_otp": True,
+        "email": admin.email,
+        "message": f"A 6-digit verification code has been sent to {admin.email}"
+    }
+
+
+@router.post("/admin/verify-otp")
+async def verify_admin_otp(
+    payload: AdminOTPVerifyRequest,
+    session: AsyncSession = Depends(get_session)
+):
+    """Step 2 of Admin Login: Verify OTP and issue JWT access token."""
+    email_clean = payload.email.strip().lower()
+    otp_clean = payload.otp_code.strip()
+    now = datetime.now(timezone.utc)
+
+    statement = select(AdminOTP).where(
+        (func.lower(AdminOTP.email) == email_clean) &
+        (AdminOTP.otp_code == otp_clean) &
+        (AdminOTP.expires_at > now)
+    )
+    result = await session.exec(statement)
+    otp_record = result.first()
+
+    if not otp_record:
+        raise HTTPException(status_code=400, detail="Invalid or expired verification code")
+
+    # Consume and delete the OTP
+    await session.delete(otp_record)
+
+    # Retrieve admin record
+    admin_stmt = select(AdminUser).where(func.lower(AdminUser.email) == email_clean)
+    admin = (await session.exec(admin_stmt)).first()
+
+    if not admin:
+        raise HTTPException(status_code=404, detail="Admin account not found")
+
+    await session.commit()
+
     access_token = create_access_token(
-        data={"sub": admin.username},
+        data={"sub": admin.username, "email": admin.email},
         expires_delta=timedelta(hours=24)
     )
-    
-    return {"access_token": access_token, "token_type": "bearer"}
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "admin": {
+            "id": admin.id,
+            "username": admin.username,
+            "email": admin.email
+        }
+    }
 
 
-@router.post("/admin/register", response_model=dict)
-async def register_admin(
-    admin_data: AdminUserCreate,
+@router.post("/admin/resend-otp")
+async def resend_admin_otp(
+    payload: AdminResendOTPRequest,
+    background_tasks: BackgroundTasks,
+    session: AsyncSession = Depends(get_session)
+):
+    """Resend 2FA OTP to admin email."""
+    email_clean = payload.email.strip().lower()
+    admin_stmt = select(AdminUser).where(func.lower(AdminUser.email) == email_clean)
+    admin = (await session.exec(admin_stmt)).first()
+
+    if not admin:
+        raise HTTPException(status_code=404, detail="Admin account not found")
+
+    otp_code = f"{secrets.randbelow(900000) + 100000}"
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
+
+    # Clean old OTPs
+    existing_otps = (await session.exec(
+        select(AdminOTP).where(func.lower(AdminOTP.email) == email_clean)
+    )).all()
+    for item in existing_otps:
+        await session.delete(item)
+
+    new_otp = AdminOTP(
+        email=email_clean,
+        otp_code=otp_code,
+        expires_at=expires_at
+    )
+    session.add(new_otp)
+    await session.commit()
+
+    background_tasks.add_task(send_otp_email, admin.email, otp_code)
+
+    return {"message": f"New verification code sent to {admin.email}"}
+
+
+@router.get("/admin/admins", response_model=List[AdminUserResponse])
+async def list_admins(
     session: AsyncSession = Depends(get_session),
     current_admin: str = Depends(get_current_admin)
 ):
-    """Register a new admin (requires existing admin authentication)."""
-    statement = select(AdminUser).where(AdminUser.username == admin_data.username)
-    result = await session.exec(statement)
-    if result.first():
+    """List all registered admin users."""
+    statement = select(AdminUser).order_by(AdminUser.created_at.desc())
+    admins = (await session.exec(statement)).all()
+    return admins
+
+
+@router.post("/admin/create-admin", response_model=AdminUserResponse)
+async def create_new_admin(
+    payload: AdminCreateRequest,
+    session: AsyncSession = Depends(get_session),
+    current_admin: str = Depends(get_current_admin)
+):
+    """Create a new admin user (requires current admin authentication)."""
+    username_clean = payload.username.strip()
+    email_clean = payload.email.strip().lower()
+
+    if len(payload.password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+
+    # Check username
+    user_chk = await session.exec(select(AdminUser).where(AdminUser.username == username_clean))
+    if user_chk.first():
         raise HTTPException(status_code=400, detail="Username already exists")
-    
-    admin = AdminUser(
-        username=admin_data.username,
-        email=admin_data.email,
-        password_hash=get_password_hash(admin_data.password)
+
+    # Check email
+    email_chk = await session.exec(select(AdminUser).where(func.lower(AdminUser.email) == email_clean))
+    if email_chk.first():
+        raise HTTPException(status_code=400, detail="Email already registered to an admin")
+
+    new_admin = AdminUser(
+        username=username_clean,
+        email=email_clean,
+        password_hash=get_password_hash(payload.password)
     )
+    session.add(new_admin)
+    await session.commit()
+    await session.refresh(new_admin)
+    return new_admin
+
+
+@router.post("/admin/change-password")
+async def change_admin_password(
+    payload: AdminChangePasswordRequest,
+    session: AsyncSession = Depends(get_session),
+    current_admin: str = Depends(get_current_admin)
+):
+    """Change current admin's password."""
+    statement = select(AdminUser).where(AdminUser.username == current_admin)
+    result = await session.exec(statement)
+    admin = result.first()
+
+    if not admin:
+        raise HTTPException(status_code=404, detail="Admin account not found")
+
+    if not verify_password(payload.current_password, admin.password_hash):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+
+    if len(payload.new_password) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
+
+    admin.password_hash = get_password_hash(payload.new_password)
     session.add(admin)
     await session.commit()
-    return {"message": "Admin created successfully"}
+
+    return {"message": "Password changed successfully"}
 
 
 # --- File Upload Route ---

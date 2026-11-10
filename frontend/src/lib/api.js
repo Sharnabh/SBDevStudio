@@ -18,9 +18,24 @@ api.interceptors.request.use((config) => {
 
 const unwrap = (promise) => promise.then((res) => res.data);
 
-// Auth
-export const adminLogin = (username, password) =>
-  unwrap(api.post("/admin/login", { username, password }));
+// Auth & 2FA
+export const adminLogin = (email, password) =>
+  unwrap(api.post("/admin/login", { email, password }));
+
+export const verifyAdminOTP = (email, otp_code) =>
+  unwrap(api.post("/admin/verify-otp", { email, otp_code }));
+
+export const resendAdminOTP = (email) =>
+  unwrap(api.post("/admin/resend-otp", { email }));
+
+export const fetchAdminList = () =>
+  unwrap(api.get("/admin/admins"));
+
+export const createAdminUser = (payload) =>
+  unwrap(api.post("/admin/create-admin", payload));
+
+export const changeAdminPassword = (payload) =>
+  unwrap(api.post("/admin/change-password", payload));
 
 // Stats
 export const fetchStats = () => unwrap(api.get("/admin/stats"));
