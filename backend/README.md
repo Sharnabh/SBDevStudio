@@ -1,51 +1,68 @@
-# Backend (FastAPI)
+# Backend (FastAPI + Supabase + Resend)
 
-FastAPI + MongoDB service that powers the SB Dev Studio site and admin dashboard. Provides public content, admin CRUD, contact intake, and email notifications.
+FastAPI service powered by **Supabase PostgreSQL** via **SQLModel**, with JWT authentication, file uploads, and email notifications via **Resend**.
 
-## Prerequisites
-- Python 3.11+
-- MongoDB running and reachable via `MONGO_URL`
+## Tech Stack
+- **Framework:** FastAPI
+- **Database / ORM:** Supabase (PostgreSQL) + SQLModel / SQLAlchemy (Asyncpg)
+- **Mailing:** Resend
+- **Hosting:** Render (Web Service) + UptimeRobot
 
-## Setup
-1) From `backend/`, create and activate a virtualenv.
-2) Install deps: `pip install -r requirements.txt`.
-3) Copy `.env.example` to `.env` (create it if missing) and fill the values below.
-4) Start the API: `uvicorn server:app --reload` (binds to `http://localhost:8000`).
+---
 
-## Environment
+## Environment Variables
+
+Copy `.env.example` to `.env`:
+
+```bash
+# Supabase PostgreSQL connection string
+# Direct: postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres
+# Pooler (Render): postgresql://postgres.[REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/sbdevstudio
+
+# JWT Secret
+SECRET_KEY=change-this-in-production
+
+# Resend Email Service
+RESEND_API_KEY=re_xxxxxxxxx
+RESEND_FROM=onboarding@resend.dev
+NOTIFY_TO=your-email@example.com
 ```
-MONGO_URL=mongodb://localhost:27017
-DB_NAME=sbdevstudio
-SECRET_KEY=change-me
-# Optional SMTP for contact notifications
-SMTP_HOST=smtp.example.com
-SMTP_PORT=587
-SMTP_USER=mailer@example.com
-SMTP_PASS=supersecret
-SMTP_FROM=mailer@example.com
-NOTIFY_TO=alerts@example.com
-```
 
-Uploads are stored under `backend/uploads/` and served at `/uploads/...`.
+---
 
-## Default admin
-On first startup, a default admin is created: `admin` / `Admin@123`. Change it after login via the register endpoint.
+## Local Setup
 
-## API surface (high level)
-- Public
-  - `GET /api/` health/info
-  - `GET /api/projects` and `GET /api/projects/{id}` (optional `category` filter)
-  - `GET /api/testimonials`
-  - `POST /api/contact` (creates a contact and triggers optional email)
-- Admin (JWT Bearer)
-  - Auth: `POST /api/admin/login`, `POST /api/admin/register`
-  - Projects: `POST|PUT|DELETE /api/admin/projects/{id}`
-  - Testimonials: `POST|PUT|DELETE /api/admin/testimonials/{id}`
-  - Contacts: `GET /api/admin/contacts`, `GET|PUT|DELETE /api/admin/contacts/{id}`
-  - Uploads: `POST /api/admin/upload` (accepts images for `projects` or `testimonials`)
-  - Stats: `GET /api/admin/stats`
+1. Create and activate a Python virtual environment:
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Set your `DATABASE_URL` in `.env`.
+4. Start the server:
+   ```bash
+   uvicorn server:app --reload
+   ```
+   Tables are automatically created in Supabase on startup.
 
-## Notes
-- JWT settings are defined in `auth.py`; default expiry is 24h.
-- File uploads are validated for type/size in `file_handler.py` (max 5 MB, image formats only).
-- SMTP send is best-effort; if SMTP vars are missing, the service logs and skips email.
+---
+
+## Deploying to Render & UptimeRobot
+
+### 1. Render Deployment
+- Create a new **Web Service** on Render connected to this repository.
+- **Root Directory:** leave blank (or project root).
+- **Build Command:** `pip install -r backend/requirements.txt`
+- **Start Command:** `cd backend && uvicorn server:app --host 0.0.0.0 --port $PORT`
+- **Health Check Path:** `/api/`
+- Add environment variables: `DATABASE_URL`, `SECRET_KEY`, `RESEND_API_KEY`, `RESEND_FROM`, `NOTIFY_TO`.
+
+### 2. UptimeRobot Setup
+- In UptimeRobot, add a new **HTTP(s) Monitor**.
+- **URL:** `https://<your-service-name>.onrender.com/api/`
+- **Monitoring Interval:** 5 minutes.
+- *This prevents Render free-tier instances from idling.*

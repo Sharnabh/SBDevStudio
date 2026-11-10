@@ -1,33 +1,36 @@
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List, Optional
-from models import Project, ProjectCreate
-from motor.motor_asyncio import AsyncIOMotorDatabase
-import os
-from datetime import datetime
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
+from models import Project
+from database import get_session
 
 router = APIRouter()
 
 
-async def get_db():
-    from server import db
-    return db
-
-
 @router.get("/projects", response_model=List[Project])
-async def get_projects(category: Optional[str] = None, db: AsyncIOMotorDatabase = Depends(get_db)):
+async def get_projects(
+    category: Optional[str] = None,
+    session: AsyncSession = Depends(get_session)
+):
     """Get all projects, optionally filtered by category."""
-    query = {}
+    statement = select(Project).order_by(Project.created_at.desc())
     if category and category != "All":
-        query["category"] = category
+        statement = statement.where(Project.category == category)
     
-    projects = await db.projects.find(query).sort("created_at", -1).to_list(100)
-    return [Project(**project) for project in projects]
+    result = await session.exec(statement)
+    return result.all()
 
 
 @router.get("/projects/{project_id}", response_model=Project)
-async def get_project(project_id: str, db: AsyncIOMotorDatabase = Depends(get_db)):
+async def get_project(
+    project_id: str,
+    session: AsyncSession = Depends(get_session)
+):
     """Get a single project by ID."""
-    project = await db.projects.find_one({"id": project_id})
+    statement = select(Project).where(Project.id == project_id)
+    result = await session.exec(statement)
+    project = result.first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-    return Project(**project)
+    return project

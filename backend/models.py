@@ -1,14 +1,20 @@
-from pydantic import BaseModel, Field, EmailStr
-from typing import List, Optional
-from datetime import datetime
+from sqlmodel import SQLModel, Field
+from sqlalchemy import Column, JSON
+from typing import List, Optional, Literal
+from datetime import datetime, timezone
 import uuid
 
 
-class ProjectBase(BaseModel):
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+# --- Project Models ---
+class ProjectBase(SQLModel):
     title: str
     description: str
     category: str
-    technologies: List[str]
+    technologies: List[str] = Field(default_factory=list, sa_column=Column(JSON))
     image: str
     link: Optional[str] = "#"
 
@@ -17,24 +23,15 @@ class ProjectCreate(ProjectBase):
     pass
 
 
-class Project(ProjectBase):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+class Project(ProjectBase, table=True):
+    __tablename__ = "projects"
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "title": "E-Commerce Platform",
-                "description": "Full-stack e-commerce solution",
-                "category": "Web Development",
-                "technologies": ["React", "Node.js", "MongoDB"],
-                "image": "/uploads/projects/image.jpg",
-                "link": "https://example.com"
-            }
-        }
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
+    created_at: datetime = Field(default_factory=utc_now)
 
 
-class TestimonialBase(BaseModel):
+# --- Testimonial Models ---
+class TestimonialBase(SQLModel):
     name: str
     role: str
     content: str
@@ -46,25 +43,17 @@ class TestimonialCreate(TestimonialBase):
     pass
 
 
-class Testimonial(TestimonialBase):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+class Testimonial(TestimonialBase, table=True):
+    __tablename__ = "testimonials"
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "name": "John Doe",
-                "role": "CEO, Tech Corp",
-                "content": "Amazing work!",
-                "rating": 5,
-                "avatar": "/uploads/testimonials/avatar.jpg"
-            }
-        }
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
+    created_at: datetime = Field(default_factory=utc_now)
 
 
-class ContactBase(BaseModel):
+# --- Contact Models ---
+class ContactBase(SQLModel):
     name: str
-    email: EmailStr
+    email: str
     subject: str
     message: str
 
@@ -73,52 +62,46 @@ class ContactCreate(ContactBase):
     pass
 
 
-class Contact(ContactBase):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    status: str = "new"
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+class Contact(ContactBase, table=True):
+    __tablename__ = "contacts"
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "name": "Jane Smith",
-                "email": "jane@example.com",
-                "subject": "Project Inquiry",
-                "message": "I'd like to discuss a project",
-                "status": "new"
-            }
-        }
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
+    status: str = Field(default="new")
+    created_at: datetime = Field(default_factory=utc_now)
 
 
-class ContactStatusUpdate(BaseModel):
-    status: str = Field(pattern="^(new|read|replied)$")
+class ContactStatusUpdate(SQLModel):
+    status: Literal["new", "read", "replied"]
 
 
-class AdminUserBase(BaseModel):
-    username: str
-    email: EmailStr
+# --- Admin User Models ---
+class AdminUserBase(SQLModel):
+    username: str = Field(unique=True, index=True)
+    email: str
 
 
 class AdminUserCreate(AdminUserBase):
     password: str
 
 
-class AdminUser(AdminUserBase):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+class AdminUser(AdminUserBase, table=True):
+    __tablename__ = "admins"
+
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
     password_hash: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
 
 
-class AdminLogin(BaseModel):
+class AdminLogin(SQLModel):
     username: str
     password: str
 
 
-class Token(BaseModel):
+class Token(SQLModel):
     access_token: str
     token_type: str = "bearer"
 
 
-class FileUploadResponse(BaseModel):
+class FileUploadResponse(SQLModel):
     filename: str
     url: str
