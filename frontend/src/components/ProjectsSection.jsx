@@ -104,19 +104,39 @@ const ProjectsSection = () => {
                   <div>
                     {/* Project Image */}
                     <div className="relative overflow-hidden h-52 bg-slate-950">
-                      <img
-                        src={project.image}
-                        alt={project.title}
-                        loading="lazy"
-                        className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
-                        onError={(e) => {
-                          e.target.src = 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80';
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0B1120] via-transparent to-transparent opacity-80" />
+                      {project.link && project.link !== '#' ? (
+                        <a
+                          href={project.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block w-full h-full"
+                          aria-label={`View ${project.title}`}
+                        >
+                          <img
+                            src={project.image}
+                            alt={project.title}
+                            loading="lazy"
+                            className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                            onError={(e) => {
+                              e.target.src = 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80';
+                            }}
+                          />
+                        </a>
+                      ) : (
+                        <img
+                          src={project.image}
+                          alt={project.title}
+                          loading="lazy"
+                          className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                          onError={(e) => {
+                            e.target.src = 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80';
+                          }}
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0B1120] via-transparent to-transparent opacity-80 pointer-events-none" />
                       
                       {/* Category Chip */}
-                      <div className="absolute top-3.5 right-3.5">
+                      <div className="absolute top-3.5 right-3.5 pointer-events-none">
                         <span className="px-3 py-1 rounded-full text-[11px] font-semibold bg-slate-900/85 text-cyan-300 border border-cyan-500/30 backdrop-blur-md">
                           {project.category}
                         </span>
@@ -127,14 +147,25 @@ const ProjectsSection = () => {
                     <div className="p-6">
                       <div className="flex items-center justify-between gap-2 mb-2">
                         <h3 className="text-lg font-bold text-white group-hover:text-cyan-300 transition-colors">
-                          {project.title}
+                          {project.link && project.link !== '#' ? (
+                            <a
+                              href={project.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="hover:underline"
+                            >
+                              {project.title}
+                            </a>
+                          ) : (
+                            project.title
+                          )}
                         </h3>
                         {project.link && project.link !== '#' && (
                           <a
                             href={project.link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-slate-400 hover:text-white p-1 rounded-md hover:bg-slate-800/60 transition-colors"
+                            className="text-slate-400 hover:text-cyan-300 p-1.5 rounded-md hover:bg-slate-800/80 transition-colors flex-shrink-0"
                             aria-label={`Visit ${project.title}`}
                           >
                             <ArrowUpRight className="w-4 h-4" />
@@ -142,9 +173,21 @@ const ProjectsSection = () => {
                         )}
                       </div>
 
-                      <p className="text-sm text-slate-300/80 line-clamp-2 leading-relaxed mb-4">
+                      <p className="text-sm text-slate-300/80 line-clamp-3 leading-relaxed mb-3">
                         {project.description}
                       </p>
+
+                      {project.link && project.link !== '#' && (
+                        <a
+                          href={project.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center space-x-1.5 text-xs font-semibold text-cyan-400 hover:text-cyan-300 transition-colors"
+                        >
+                          <span>{project.link.includes('apps.apple.com') ? 'View on App Store' : 'Visit Live Platform'}</span>
+                          <ArrowUpRight className="w-3.5 h-3.5" />
+                        </a>
+                      )}
                     </div>
                   </div>
 
