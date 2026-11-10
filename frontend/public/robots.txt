@@ -1,0 +1,13 @@
+# Robots.txt for https://www.sbdevstudio.in
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /foodies-admin
+Disallow: /foodies-admin/*
+
+# Host
+Host: https://www.sbdevstudio.in
+
+# Sitemaps
+Sitemap: https://www.sbdevstudio.in/sitemap.xml

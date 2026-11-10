@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Navbar from '../components/Navbar';
 import HeroSection from '../components/HeroSection';
 import AboutSection from '../components/AboutSection';
@@ -10,18 +10,10 @@ import ContactSection from '../components/ContactSection';
 import Footer from '../components/Footer';
 
 const HomePage = () => {
-  const [scrollY, setScrollY] = useState(0);
-
-  useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   return (
-    <div className="relative bg-[#0A1628] min-h-screen overflow-x-hidden">
+    <div className="relative bg-[#070B14] min-h-screen overflow-x-hidden selection:bg-cyan-500/30 selection:text-cyan-200">
       <Navbar />
-      <HeroSection scrollY={scrollY} />
+      <HeroSection />
       <AboutSection />
       <AbilitiesSection />
       <ProjectsSection />

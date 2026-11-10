@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { Star, MessageSquareQuote, BadgeCheck } from 'lucide-react';
 import { fetchTestimonials } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
 const TestimonialsSection = () => {
   const { toast } = useToast();
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -13,7 +12,7 @@ const TestimonialsSection = () => {
     const load = async () => {
       try {
         const data = await fetchTestimonials();
-        setItems(data);
+        setItems(Array.isArray(data) ? data : []);
       } catch (error) {
         toast({ title: 'Could not load testimonials', description: 'Please try again later.' });
       } finally {
@@ -23,89 +22,99 @@ const TestimonialsSection = () => {
     load();
   }, [toast]);
 
-  const nextTestimonial = () => {
-    setCurrentIndex((prev) => items.length ? (prev + 1) % items.length : 0);
-  };
-
-  const prevTestimonial = () => {
-    setCurrentIndex((prev) => items.length ? (prev - 1 + items.length) % items.length : 0);
-  };
-
   return (
-    <section id="testimonials" className="relative py-24 bg-[#0A1628]">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16 fade-in-up">
+    <section id="testimonials" className="relative py-20 sm:py-28 bg-[#070B14]">
+      {/* Soft background ambient lighting */}
+      <div className="absolute top-1/2 right-1/4 w-80 h-80 bg-indigo-500/10 blur-[140px] rounded-full pointer-events-none -z-10" />
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Section Heading */}
+        <div className="text-center max-w-2xl mx-auto mb-16">
+          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-xs font-semibold text-cyan-400 mb-4">
+            <MessageSquareQuote className="w-3.5 h-3.5" />
+            <span>Client Feedback</span>
+          </div>
           <h2 className="section-title mb-4">
-            Client <span className="gradient-text">Testimonials</span>
+            Trusted by founders &{' '}
+            <span className="gradient-text">engineering leaders</span>
           </h2>
-          <p className="text-xl text-gray-400">
-            What our clients say about working with us
+          <p className="text-base text-slate-300/80">
+            Real feedback from companies that partnered with SB Dev Studio to design and ship their products.
           </p>
         </div>
 
-        <div className="relative">
-          {loading ? (
-            <p className="text-center text-gray-400">Loading testimonials...</p>
-          ) : items.length === 0 ? (
-            <p className="text-center text-gray-400">No testimonials yet.</p>
-          ) : (
-            <>
-              <div className="testimonial-card">
-                <div className="flex items-center mb-6">
-                  <img
-                    src={items[currentIndex].avatar}
-                    alt={items[currentIndex].name}
-                    className="w-16 h-16 rounded-full border-2 border-cyan-500 mr-4"
-                  />
-                  <div>
-                    <h4 className="text-xl font-bold text-white">{items[currentIndex].name}</h4>
-                    <p className="text-gray-400">{items[currentIndex].role}</p>
+        {/* Testimonials Grid */}
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[1, 2].map((n) => (
+              <div key={n} className="glass-card-static rounded-2xl p-7 animate-pulse h-48 space-y-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 rounded-full bg-slate-800" />
+                  <div className="space-y-2 flex-1">
+                    <div className="h-4 bg-slate-800 rounded w-1/3" />
+                    <div className="h-3 bg-slate-800/60 rounded w-1/4" />
                   </div>
                 </div>
+                <div className="h-4 bg-slate-800/50 rounded w-full" />
+              </div>
+            ))}
+          </div>
+        ) : items.length === 0 ? (
+          <div className="py-12 text-center glass-card-static rounded-2xl max-w-md mx-auto">
+            <p className="text-slate-400 font-medium">No reviews published yet.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {items.map((item) => (
+              <div
+                key={item.id}
+                className="glass-panel p-6 sm:p-7 rounded-2xl flex flex-col justify-between"
+              >
+                <div>
+                  {/* Rating Stars & Verified Chip */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-1">
+                      {[...Array(item.rating || 5)].map((_, i) => (
+                        <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                      ))}
+                    </div>
+                    <div className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-medium text-emerald-400">
+                      <BadgeCheck className="w-3.5 h-3.5" />
+                      <span>Verified Client</span>
+                    </div>
+                  </div>
 
-                <div className="flex mb-4">
-                  {[...Array(items[currentIndex].rating)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                  ))}
+                  {/* Quote Content */}
+                  <p className="text-sm sm:text-base text-slate-200 leading-relaxed font-normal italic mb-6">
+                    "{item.content}"
+                  </p>
                 </div>
 
-                <p className="text-lg text-gray-300 leading-relaxed italic">
-                  "{items[currentIndex].content}"
-                </p>
-              </div>
-
-              <div className="flex justify-center items-center gap-4 mt-8">
-                <button
-                  onClick={prevTestimonial}
-                  className="p-3 bg-white/5 hover:bg-cyan-500/20 border border-cyan-500/30 rounded-full transition-all duration-300 hover:scale-110"
-                >
-                  <ChevronLeft className="w-6 h-6 text-cyan-400" />
-                </button>
-
-                <div className="flex gap-2">
-                  {items.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentIndex(index)}
-                      className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                        index === currentIndex
-                          ? 'bg-cyan-500 w-8'
-                          : 'bg-white/20 hover:bg-white/40'
-                      }`}
-                    />
-                  ))}
+                {/* Author Info */}
+                <div className="flex items-center space-x-3.5 pt-4 border-t border-slate-800/60">
+                  <img
+                    src={item.avatar}
+                    alt={item.name}
+                    loading="lazy"
+                    className="w-11 h-11 rounded-full object-cover border border-slate-700/60 flex-shrink-0"
+                    onError={(e) => {
+                      e.target.src = 'https://i.pravatar.cc/150?img=12';
+                    }}
+                  />
+                  <div>
+                    <h4 className="text-sm font-bold text-white leading-tight">
+                      {item.name}
+                    </h4>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {item.role}
+                    </p>
+                  </div>
                 </div>
-
-                <button
-                  onClick={nextTestimonial}
-                  className="p-3 bg-white/5 hover:bg-cyan-500/20 border border-cyan-500/30 rounded-full transition-all duration-300 hover:scale-110"
-                >
-                  <ChevronRight className="w-6 h-6 text-cyan-400" />
-                </button>
               </div>
-            </>
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

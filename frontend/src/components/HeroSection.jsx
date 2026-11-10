@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import { ArrowRight, Code, Smartphone, Globe } from 'lucide-react';
+import { ArrowRight, Code2, Smartphone, Cloud, Sparkles, CheckCircle2 } from 'lucide-react';
 
-const HeroSection = ({ scrollY }) => {
+const HeroSection = () => {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -9,135 +9,137 @@ const HeroSection = ({ scrollY }) => {
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    let animationFrameId;
 
-    const particles = [];
-    const particleCount = 50;
-
-    for (let i = 0; i < particleCount; i++) {
-      particles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: (Math.random() - 0.5) * 0.5,
-        size: Math.random() * 2 + 1
-      });
-    }
-
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = 'rgba(0, 212, 255, 0.5)';
-
-      particles.forEach((particle) => {
-        particle.x += particle.vx;
-        particle.y += particle.vy;
-
-        if (particle.x < 0 || particle.x > canvas.width) particle.vx *= -1;
-        if (particle.y < 0 || particle.y > canvas.height) particle.vy *= -1;
-
-        ctx.beginPath();
-        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-        ctx.fill();
-      });
-
-      requestAnimationFrame(animate);
-    };
-
-    animate();
-
-    const handleResize = () => {
+    const resize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     };
+    resize();
+    window.addEventListener('resize', resize);
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    // Create subtle, soothing ambient particles
+    const particles = [];
+    const count = Math.min(35, Math.floor(window.innerWidth / 35));
+
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        size: Math.random() * 1.5 + 0.5,
+        alpha: Math.random() * 0.3 + 0.1,
+      });
+    }
+
+    const render = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      particles.forEach((p) => {
+        p.x += p.vx;
+        p.y += p.vy;
+
+        if (p.x < 0) p.x = canvas.width;
+        if (p.x > canvas.width) p.x = 0;
+        if (p.y < 0) p.y = canvas.height;
+        if (p.y > canvas.height) p.y = 0;
+
+        ctx.fillStyle = `rgba(56, 189, 248, ${p.alpha})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('resize', resize);
+    };
   }, []);
 
-  const scrollToContact = () => {
-    const element = document.getElementById('contact');
-    if (element) element.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const scrollToProjects = () => {
-    const element = document.getElementById('projects');
+  const scrollTo = (id) => {
+    const element = document.getElementById(id);
     if (element) element.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
-    <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      <canvas ref={canvasRef} className="absolute inset-0 opacity-30" />
+    <section id="home" className="relative min-h-[92vh] sm:min-h-screen flex items-center justify-center pt-28 pb-16 overflow-hidden">
+      {/* Background Interactive Ambient Canvas */}
+      <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" />
 
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0A1628]/50 to-[#0A1628]"></div>
+      {/* Eyesoothing Ambient Mesh Glows */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-cyan-500/15 via-indigo-500/15 to-purple-500/10 blur-[130px] rounded-full pointer-events-none -z-10 animate-pulse-glow" />
+      <div className="absolute bottom-10 right-1/4 w-[400px] h-[250px] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none -z-10" />
 
-      <div
-        className="absolute top-20 right-10 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl"
-        style={{ transform: `translateY(${scrollY * 0.3}px)` }}
-      ></div>
-      <div
-        className="absolute bottom-20 left-10 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"
-        style={{ transform: `translateY(${-scrollY * 0.2}px)` }}
-      ></div>
+      {/* Subtle Grid Accent */}
+      <div 
+        className="absolute inset-0 opacity-[0.03] pointer-events-none -z-10"
+        style={{
+          backgroundImage: 'radial-gradient(circle at 1px 1px, #94A3B8 1px, transparent 0)',
+          backgroundSize: '40px 40px',
+        }}
+      />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 text-center">
-        <div className="floating-icons flex justify-center gap-8 mb-12">
-          <div className="icon-wrapper" style={{ animationDelay: '0s' }}>
-            <Code className="w-12 h-12 text-cyan-400" />
-          </div>
-          <div className="icon-wrapper" style={{ animationDelay: '0.2s' }}>
-            <Smartphone className="w-12 h-12 text-blue-400" />
-          </div>
-          <div className="icon-wrapper" style={{ animationDelay: '0.4s' }}>
-            <Globe className="w-12 h-12 text-purple-400" />
-          </div>
+      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center">
+        {/* Modern Pill Badge */}
+        <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-slate-900/80 border border-slate-700/60 shadow-inner mb-6 backdrop-blur-md">
+          <Sparkles className="w-4 h-4 text-cyan-400" />
+          <span className="text-xs sm:text-sm font-medium text-slate-300">
+            Full-Stack Engineering & Product Design Studio
+          </span>
         </div>
 
-        <h1 className="hero-title mb-6">
-          Crafting Digital
-          <br />
-          <span className="gradient-text">Experiences</span>
+        {/* Hero Title */}
+        <h1 className="hero-title max-w-4xl mx-auto mb-6">
+          Crafting Scalable Apps &{' '}
+          <span className="gradient-text">Digital Experiences</span>
         </h1>
 
-        <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-          We build stunning websites and powerful mobile applications that transform your ideas into reality.
+        {/* Subtitle */}
+        <p className="text-base sm:text-xl text-slate-300/90 max-w-2xl mx-auto mb-10 leading-relaxed font-normal">
+          We architect and build high-performance web platforms, cross-platform mobile apps, and resilient cloud systems for ambitious startups and businesses.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-4 w-full sm:w-auto mb-14">
           <button
-            onClick={scrollToContact}
-            className="group px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-full font-semibold text-lg hover:shadow-2xl hover:shadow-cyan-500/50 transition-all duration-300 hover:scale-105 flex items-center gap-2"
+            onClick={() => scrollTo('projects')}
+            className="w-full sm:w-auto btn-primary px-8 py-3.5 text-sm sm:text-base flex items-center justify-center space-x-2"
           >
-            Start Your Project
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            <span>Explore Portfolio</span>
+            <ArrowRight className="w-4 h-4" />
           </button>
           <button
-            onClick={scrollToProjects}
-            className="px-8 py-4 border-2 border-cyan-500 text-cyan-400 rounded-full font-semibold text-lg hover:bg-cyan-500/10 transition-all duration-300 hover:scale-105"
+            onClick={() => scrollTo('contact')}
+            className="w-full sm:w-auto btn-secondary px-8 py-3.5 text-sm sm:text-base flex items-center justify-center space-x-2"
           >
-            View Our Work
+            <span>Discuss a Project</span>
           </button>
         </div>
 
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-          <div className="stat-card">
-            <div className="text-4xl font-bold gradient-text mb-2">10+</div>
-            <div className="text-gray-400">Projects Delivered</div>
+        {/* Trust & Proof Bar */}
+        <div className="w-full max-w-4xl grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 pt-6 border-t border-slate-800/60">
+          <div className="p-3.5 rounded-xl bg-slate-900/40 border border-slate-800/40 backdrop-blur-sm flex flex-col items-center">
+            <span className="text-xl sm:text-2xl font-bold text-white tracking-tight">100%</span>
+            <span className="text-xs text-slate-400 font-medium mt-0.5">Client Satisfaction</span>
           </div>
-          <div className="stat-card">
-            <div className="text-4xl font-bold gradient-text mb-2">5+</div>
-            <div className="text-gray-400">Happy Clients</div>
+          <div className="p-3.5 rounded-xl bg-slate-900/40 border border-slate-800/40 backdrop-blur-sm flex flex-col items-center">
+            <span className="text-xl sm:text-2xl font-bold text-cyan-400 tracking-tight">FastAPI & React</span>
+            <span className="text-xs text-slate-400 font-medium mt-0.5">Modern Architecture</span>
           </div>
-          <div className="stat-card">
-            <div className="text-4xl font-bold gradient-text mb-2">1+</div>
-            <div className="text-gray-400">Years Experience</div>
+          <div className="p-3.5 rounded-xl bg-slate-900/40 border border-slate-800/40 backdrop-blur-sm flex flex-col items-center">
+            <span className="text-xl sm:text-2xl font-bold text-indigo-400 tracking-tight">PostgreSQL</span>
+            <span className="text-xs text-slate-400 font-medium mt-0.5">Supabase Powered</span>
           </div>
-        </div>
-      </div>
-
-      <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce">
-        <div className="w-6 h-10 border-2 border-cyan-500 rounded-full flex justify-center pt-2">
-          <div className="w-1 h-3 bg-cyan-500 rounded-full"></div>
+          <div className="p-3.5 rounded-xl bg-slate-900/40 border border-slate-800/40 backdrop-blur-sm flex flex-col items-center">
+            <span className="text-xl sm:text-2xl font-bold text-emerald-400 tracking-tight">99.9%</span>
+            <span className="text-xs text-slate-400 font-medium mt-0.5">Reliable Uptime</span>
+          </div>
         </div>
       </div>
     </section>

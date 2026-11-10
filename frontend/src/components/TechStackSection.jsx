@@ -1,50 +1,97 @@
 import React from 'react';
+import { Cpu } from 'lucide-react';
 
-const techStack = [
-  { name: 'React', color: '#61DAFB' },
-  { name: 'Vue.js', color: '#42B883' },
-  { name: 'Next.js', color: '#FFFFFF' },
-  { name: 'React Native', color: '#61DAFB' },
-  { name: 'SwiftUI', color: '#ff2d55' },
-  { name: 'UIKit', color: '#0a84ff' },
-  { name: 'Kotlin', color: '#a97bff' },
-  { name: 'Flutter', color: '#02569b' },
-  { name: 'Node.js', color: '#339933' },
-  { name: 'Python', color: '#3776AB' },
-  { name: 'MongoDB', color: '#47A248' },
-  { name: 'PostgreSQL', color: '#336791' },
-  { name: 'Firebase', color: '#FFCA28' },
-  { name: 'Supabase', color: '#3ecf8e' },
-  { name: 'AWS', color: '#FF9900' },
-  { name: 'Docker', color: '#2496ED' },
-  { name: 'Git', color: '#F05032' }
+const categories = [
+  {
+    name: 'Frontend & UI',
+    technologies: [
+      { name: 'React', color: '#61DAFB' },
+      { name: 'Next.js', color: '#FFFFFF' },
+      { name: 'TypeScript', color: '#3178C6' },
+      { name: 'Tailwind CSS', color: '#38BDF8' },
+      { name: 'Vue.js', color: '#42B883' },
+    ],
+  },
+  {
+    name: 'Backend & APIs',
+    technologies: [
+      { name: 'FastAPI', color: '#009688' },
+      { name: 'Python', color: '#3776AB' },
+      { name: 'Node.js', color: '#5FA04E' },
+      { name: 'Express', color: '#E2E8F0' },
+      { name: 'GraphQL', color: '#E10098' },
+    ],
+  },
+  {
+    name: 'Databases & Storage',
+    technologies: [
+      { name: 'PostgreSQL', color: '#4169E1' },
+      { name: 'Supabase', color: '#3ECF8E' },
+      { name: 'SQLModel', color: '#009688' },
+      { name: 'MongoDB', color: '#47A248' },
+      { name: 'Redis', color: '#DC382D' },
+    ],
+  },
+  {
+    name: 'Mobile & Cloud',
+    technologies: [
+      { name: 'React Native', color: '#61DAFB' },
+      { name: 'SwiftUI', color: '#FF2D55' },
+      { name: 'Flutter', color: '#02569B' },
+      { name: 'Render', color: '#46E3B7' },
+      { name: 'Resend', color: '#FFFFFF' },
+      { name: 'AWS & Vercel', color: '#FF9900' },
+    ],
+  },
 ];
 
 const TechStackSection = () => {
   return (
-    <section className="relative py-24 bg-gradient-to-b from-[#0A1628] to-[#0f1e36]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16 fade-in-up">
+    <section id="tech-stack" className="relative py-20 sm:py-28 bg-[#090D18]">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Section Header */}
+        <div className="text-center max-w-2xl mx-auto mb-16">
+          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-xs font-semibold text-cyan-400 mb-4">
+            <Cpu className="w-3.5 h-3.5" />
+            <span>Modern Stack</span>
+          </div>
           <h2 className="section-title mb-4">
-            Tech <span className="gradient-text">Stack</span>
+            Powered by modern,{' '}
+            <span className="gradient-text">battle-tested tools</span>
           </h2>
-          <p className="text-xl text-gray-400">
-            Cutting-edge technologies we use to build amazing products
+          <p className="text-base text-slate-300/80">
+            We pick industry-standard frameworks and platforms engineered for reliability, security, and velocity.
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
-          {techStack.map((tech, index) => (
+        {/* Categorized Tech Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {categories.map((cat) => (
             <div
-              key={index}
-              className="tech-badge group"
-              style={{ animationDelay: `${index * 0.05}s` }}
+              key={cat.name}
+              className="glass-panel p-6 rounded-2xl flex flex-col justify-between"
             >
-              <div
-                className="w-3 h-3 rounded-full mb-3"
-                style={{ backgroundColor: tech.color }}
-              ></div>
-              <span className="text-white font-medium">{tech.name}</span>
+              <div>
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">
+                  {cat.name}
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {cat.technologies.map((t) => (
+                    <div
+                      key={t.name}
+                      className="group flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-slate-900/80 border border-slate-800/80 hover:border-cyan-500/30 transition-all duration-200"
+                    >
+                      <span
+                        className="w-2 h-2 rounded-full flex-shrink-0 group-hover:scale-125 transition-transform"
+                        style={{ backgroundColor: t.color }}
+                      />
+                      <span className="text-xs font-medium text-slate-200 group-hover:text-white">
+                        {t.name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           ))}
         </div>
