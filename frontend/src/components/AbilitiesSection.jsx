@@ -189,4 +189,4 @@ const AbilitiesSection = () => {
   );
 };
 
-export default AbilitiesSection;
+export default React.memo(AbilitiesSection);

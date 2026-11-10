@@ -33,6 +33,8 @@ const HeroSection = () => {
       });
     }
 
+    let isAnimating = false;
+
     const render = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -51,13 +53,42 @@ const HeroSection = () => {
         ctx.fill();
       });
 
-      animationFrameId = requestAnimationFrame(render);
+      if (isAnimating) {
+        animationFrameId = requestAnimationFrame(render);
+      }
     };
 
-    render();
+    const startAnimation = () => {
+      if (!isAnimating) {
+        isAnimating = true;
+        animationFrameId = requestAnimationFrame(render);
+      }
+    };
+
+    const stopAnimation = () => {
+      isAnimating = false;
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+
+    // Pause canvas animation when hero is off-screen to save CPU/GPU and eliminate scroll stutter
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          startAnimation();
+        } else {
+          stopAnimation();
+        }
+      },
+      { threshold: 0.05 }
+    );
+
+    observer.observe(canvas);
 
     return () => {
-      cancelAnimationFrame(animationFrameId);
+      stopAnimation();
+      observer.disconnect();
       window.removeEventListener('resize', resize);
     };
   }, []);
@@ -146,4 +177,4 @@ const HeroSection = () => {
   );
 };
 
-export default HeroSection;
+export default React.memo(HeroSection);

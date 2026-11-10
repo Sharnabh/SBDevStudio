@@ -1,15 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Menu, X, ArrowUpRight, Sparkles } from 'lucide-react';
 
 const Navbar = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const navRef = useRef(null);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 30);
+    const nav = navRef.current;
+    if (!nav) return;
+
+    let isScrolled = window.scrollY > 30;
+
+    const updateNavClass = (scrolled) => {
+      if (scrolled) {
+        nav.classList.add('bg-[#0B1120]/90', 'backdrop-blur-xl', 'border-slate-800/80', 'shadow-2xl', 'shadow-black/50');
+        nav.classList.remove('bg-[#0B1120]/50', 'backdrop-blur-md', 'border-slate-800/40');
+      } else {
+        nav.classList.remove('bg-[#0B1120]/90', 'backdrop-blur-xl', 'border-slate-800/80', 'shadow-2xl', 'shadow-black/50');
+        nav.classList.add('bg-[#0B1120]/50', 'backdrop-blur-md', 'border-slate-800/40');
+      }
     };
-    window.addEventListener('scroll', handleScroll);
+
+    updateNavClass(isScrolled);
+
+    const handleScroll = () => {
+      const over = window.scrollY > 30;
+      if (over !== isScrolled) {
+        isScrolled = over;
+        updateNavClass(isScrolled);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -24,11 +46,8 @@ const Navbar = () => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 py-3 sm:py-4 px-4 sm:px-6">
       <nav
-        className={`max-w-6xl mx-auto rounded-full transition-all duration-300 px-5 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between ${
-          isScrolled
-            ? 'bg-[#0B1120]/85 backdrop-blur-xl border border-slate-800/80 shadow-2xl shadow-black/50'
-            : 'bg-[#0B1120]/50 backdrop-blur-md border border-slate-800/40'
-        }`}
+        ref={navRef}
+        className="max-w-6xl mx-auto rounded-full transition-all duration-300 px-5 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between border bg-[#0B1120]/50 backdrop-blur-md border-slate-800/40"
       >
         {/* Brand Logo */}
         <div
@@ -178,4 +197,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;
+export default React.memo(Navbar);

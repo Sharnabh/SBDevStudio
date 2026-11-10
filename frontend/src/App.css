@@ -184,3 +184,18 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #334155;
 }
+
+/* GPU hardware acceleration for fixed navigation & smooth scrolling */
+header {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Content visibility optimization for heavy off-screen sections */
+#projects,
+#testimonials,
+#tech-stack,
+#contact {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 700px;
+}

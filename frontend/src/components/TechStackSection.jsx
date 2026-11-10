@@ -100,4 +100,4 @@ const TechStackSection = () => {
   );
 };
 
-export default TechStackSection;
+export default React.memo(TechStackSection);
