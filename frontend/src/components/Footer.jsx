@@ -13,11 +13,12 @@ const Footer = () => {
       { name: 'Contact', href: '#contact' },
     ],
     Services: [
+      { name: 'MVP Building & Launch', href: '#abilities' },
+      { name: 'Bug Fixing (All Platforms)', href: '#abilities' },
       { name: 'Full-Stack Web Apps', href: '#abilities' },
       { name: 'Mobile App Development', href: '#abilities' },
-      { name: 'FastAPI & Backend APIs', href: '#abilities' },
-      { name: 'UI/UX Product Design', href: '#abilities' },
-      { name: 'Cloud & Database Tuning', href: '#abilities' },
+      { name: 'Backend & Cloud APIs', href: '#abilities' },
+      { name: 'Pricing & Discussion', href: '#contact' },
     ],
     Connect: [
       { name: 'GitHub', href: 'https://github.com/Sharnabh', icon: Github },
