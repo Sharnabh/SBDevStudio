@@ -1,12 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAdminRoute } from "@/lib/routes";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import SEOHead from "@/components/SEOHead";
 import {
   createProject,
   createTestimonial,
@@ -32,11 +29,28 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Users, KeyRound, UserPlus, ShieldCheck } from "lucide-react";
+import {
+  Users,
+  KeyRound,
+  UserPlus,
+  Shield,
+  ExternalLink,
+  LogOut,
+  FolderPlus,
+  MessageSquarePlus,
+  Mail,
+  Trash2,
+  Edit2,
+  CheckCircle2,
+  Clock,
+  Layers,
+  Star,
+  Upload,
+} from "lucide-react";
 
-const gradientCard = "border-cyan-500/20 bg-gradient-to-br from-[#0b1a2f] via-[#0c223f] to-[#0b1a2f] text-white shadow-xl shadow-cyan-500/10";
+const studioCard = "border border-[#232b3e] bg-[#131824] text-[#e9edf3] rounded-2xl p-6 shadow-md";
 
-const AdminDashboard = () => {
+export default function AdminDashboard() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { token, logout } = useAuth();
@@ -51,7 +65,7 @@ const AdminDashboard = () => {
     title: "",
     description: "",
     category: "Web Development",
-    technologiesText: "React, FastAPI, MongoDB",
+    technologiesText: "React, FastAPI, Supabase",
     image: "",
     link: "",
   });
@@ -80,10 +94,10 @@ const AdminDashboard = () => {
   const categoryOptions = useMemo(() => [
     "Web Development",
     "Mobile Apps",
-    "AI/ML",
-    "Automation",
-    "Design",
-    "All",
+    "AI/ML Engineering",
+    "Cloud Architecture",
+    "DevOps & Security",
+    "Design Systems",
   ], []);
 
   useEffect(() => {
@@ -137,17 +151,17 @@ const AdminDashboard = () => {
       if (editingProject) {
         const updated = await updateProject(editingProject.id, payload);
         setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
-        toast({ title: "Project updated" });
+        toast({ title: "Project updated", description: updated.title });
       } else {
         const created = await createProject(payload);
         setProjects((prev) => [created, ...prev]);
-        toast({ title: "Project created" });
+        toast({ title: "Project published", description: created.title });
       }
-      setProjectForm({ title: "", description: "", category: "Web Development", technologiesText: "React, FastAPI, MongoDB", image: "", link: "" });
+      setProjectForm({ title: "", description: "", category: "Web Development", technologiesText: "React, FastAPI, Supabase", image: "", link: "" });
       setEditingProject(null);
     } catch (error) {
       const detail = error?.response?.data?.detail || "Save failed";
-      toast({ title: "Project error", description: detail });
+      toast({ title: "Project error", description: detail, variant: "destructive" });
     }
   };
 
@@ -157,20 +171,20 @@ const AdminDashboard = () => {
       title: project.title,
       description: project.description,
       category: project.category,
-      technologiesText: project.technologies.join(", "),
+      technologiesText: (project.technologies || []).join(", "),
       image: project.image,
       link: project.link,
     });
   };
 
   const handleProjectDelete = async (id) => {
-    if (!window.confirm("Delete this project?")) return;
+    if (!window.confirm("Permanently delete this project from the portfolio?")) return;
     try {
       await deleteProject(id);
       setProjects((prev) => prev.filter((p) => p.id !== id));
       toast({ title: "Project deleted" });
     } catch (error) {
-      toast({ title: "Delete failed", description: "Could not delete project" });
+      toast({ title: "Delete failed", description: "Could not delete project", variant: "destructive" });
     }
   };
 
@@ -185,13 +199,13 @@ const AdminDashboard = () => {
       } else {
         const created = await createTestimonial(payload);
         setTestimonials((prev) => [created, ...prev]);
-        toast({ title: "Testimonial created" });
+        toast({ title: "Testimonial published" });
       }
       setTestimonialForm({ name: "", role: "", content: "", rating: 5, avatar: "" });
       setEditingTestimonial(null);
     } catch (error) {
       const detail = error?.response?.data?.detail || "Save failed";
-      toast({ title: "Testimonial error", description: detail });
+      toast({ title: "Testimonial error", description: detail, variant: "destructive" });
     }
   };
 
@@ -207,13 +221,13 @@ const AdminDashboard = () => {
   };
 
   const handleTestimonialDelete = async (id) => {
-    if (!window.confirm("Delete this testimonial?")) return;
+    if (!window.confirm("Permanently delete this testimonial?")) return;
     try {
       await deleteTestimonial(id);
       setTestimonials((prev) => prev.filter((t) => t.id !== id));
       toast({ title: "Testimonial deleted" });
     } catch (error) {
-      toast({ title: "Delete failed", description: "Could not delete testimonial" });
+      toast({ title: "Delete failed", description: "Could not delete testimonial", variant: "destructive" });
     }
   };
 
@@ -221,20 +235,20 @@ const AdminDashboard = () => {
     try {
       const updated = await updateContactStatus(id, status);
       setContacts((prev) => prev.map((c) => (c.id === id ? updated : c)));
-      toast({ title: "Status updated" });
+      toast({ title: "Status updated", description: `Marked as ${status}` });
     } catch (error) {
-      toast({ title: "Update failed", description: "Could not update contact" });
+      toast({ title: "Update failed", description: "Could not update contact status", variant: "destructive" });
     }
   };
 
   const handleContactDelete = async (id) => {
-    if (!window.confirm("Delete this contact?")) return;
+    if (!window.confirm("Permanently delete this enquiry?")) return;
     try {
       await deleteContact(id);
       setContacts((prev) => prev.filter((c) => c.id !== id));
       toast({ title: "Contact deleted" });
     } catch (error) {
-      toast({ title: "Delete failed", description: "Could not delete contact" });
+      toast({ title: "Delete failed", description: "Could not delete contact", variant: "destructive" });
     }
   };
 
@@ -243,10 +257,10 @@ const AdminDashboard = () => {
     try {
       const res = await uploadImage(file, subfolder);
       onDone(res.url);
-      toast({ title: "Uploaded", description: file.name });
+      toast({ title: "File Uploaded", description: file.name });
     } catch (error) {
       const detail = error?.response?.data?.detail || "Upload failed";
-      toast({ title: "Upload error", description: detail });
+      toast({ title: "Upload error", description: detail, variant: "destructive" });
     }
   };
 
@@ -278,7 +292,7 @@ const AdminDashboard = () => {
       const created = await createAdminUser(newAdminForm);
       setAdminList((prev) => [created, ...prev]);
       setNewAdminForm({ username: "", email: "", password: "" });
-      toast({ title: "Admin Created", description: `Admin account '${created.username}' created successfully.` });
+      toast({ title: "Admin Created", description: `Account '${created.username}' initialized.` });
     } catch (error) {
       const msg = error?.response?.data?.detail || "Could not create admin.";
       toast({ title: "Creation Failed", description: msg, variant: "destructive" });
@@ -307,7 +321,7 @@ const AdminDashboard = () => {
         current_password: passwordForm.current_password,
         new_password: passwordForm.new_password,
       });
-      toast({ title: "Password Changed", description: "Your admin password has been updated." });
+      toast({ title: "Password Updated", description: "Your admin password has been changed." });
       setPasswordForm({ current_password: "", new_password: "", confirm_password: "" });
       setIsPasswordModalOpen(false);
     } catch (error) {
@@ -320,384 +334,661 @@ const AdminDashboard = () => {
 
   const statItems = stats
     ? [
-        { label: "Projects", value: stats.total_projects },
-        { label: "Testimonials", value: stats.total_testimonials },
-        { label: "Contacts", value: stats.total_contacts },
-        { label: "New Contacts", value: stats.new_contacts },
+        { label: "Total Projects", value: stats.total_projects, sub: "Portfolio showcase" },
+        { label: "Client Testimonials", value: stats.total_testimonials, sub: "Verified proof" },
+        { label: "Total Contacts", value: stats.total_contacts, sub: "All time enquiries" },
+        { label: "New Enquiries", value: stats.new_contacts, sub: "Action required", highlight: true },
       ]
     : [];
 
   return (
-    <div className="min-h-screen bg-[#050b17] text-white px-4 py-8">
-      <div className="max-w-6xl mx-auto space-y-8">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm text-cyan-300/80">SB Dev Studio Admin</p>
-            <h1 className="text-3xl font-semibold">Control Center</h1>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="outline"
-              className="border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 flex items-center space-x-1.5"
-              onClick={handleOpenAdminModal}
-            >
-              <Users className="w-4 h-4 mr-1.5" />
-              <span>Admins</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 flex items-center space-x-1.5"
-              onClick={() => setIsPasswordModalOpen(true)}
-            >
-              <KeyRound className="w-4 h-4 mr-1.5" />
-              <span>Change Password</span>
-            </Button>
-            <Button variant="outline" className="border-cyan-400/40 text-cyan-200" onClick={() => window.open("http://localhost:3000", "_blank")}>View site</Button>
-            <Button variant="secondary" className="bg-white/10 border border-cyan-400/40" onClick={handleLogout}>Sign out</Button>
+    <div className="min-h-screen bg-[#0a0d14] text-[#e9edf3] font-sans selection:bg-[#5ab9fc]/20 selection:text-[#5ab9fc]">
+      <SEOHead
+        title="Studio Control Center | SB Dev Studio"
+        description="Administrative management dashboard for SB Dev Studio."
+        robots="noindex, nofollow"
+      />
+
+      {/* Top Studio Bar */}
+      <header className="border-b border-[#232b3e] bg-[#0d111c]/90 backdrop-blur-md px-6 sm:px-10 py-4 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-30">
+        <div className="flex items-center space-x-3">
+          <img
+            src="/assets/SB_DevStudio_Logo.svg"
+            alt="SB Dev Studio"
+            className="w-7 h-7 object-contain"
+          />
+          <div className="flex items-center space-x-2 text-xs font-mono">
+            <span className="text-[#8891a1]">studio</span>
+            <span className="text-[#454e5f]">/</span>
+            <span className="text-[#5ab9fc] font-semibold">control-center</span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Global Action Triggers */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            type="button"
+            onClick={handleOpenAdminModal}
+            className="btn-secondary text-xs px-3 py-1.5 flex items-center space-x-1.5"
+          >
+            <Users className="w-3.5 h-3.5 text-[#5ab9fc]" />
+            <span>Admins</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsPasswordModalOpen(true)}
+            className="btn-secondary text-xs px-3 py-1.5 flex items-center space-x-1.5"
+          >
+            <KeyRound className="w-3.5 h-3.5 text-[#5ab9fc]" />
+            <span>Password</span>
+          </button>
+
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-secondary text-xs px-3 py-1.5 flex items-center space-x-1.5"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            <span>View Site</span>
+          </a>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-xs font-mono transition-colors flex items-center space-x-1.5"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Sign Out</span>
+          </button>
+        </div>
+      </header>
+
+      {/* Main Container */}
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+        {/* Metric Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {statItems.map((item) => (
-            <Card key={item.label} className={`${gradientCard} border border-cyan-500/30`}>
-              <CardHeader className="pb-2">
-                <CardDescription className="text-slate-300">{item.label}</CardDescription>
-                <CardTitle className="text-2xl text-white">{loading ? "--" : item.value}</CardTitle>
-              </CardHeader>
-            </Card>
+            <div
+              key={item.label}
+              className={`p-5 rounded-2xl bg-[#131824] border ${
+                item.highlight ? "border-[#5ab9fc]/50" : "border-[#232b3e]"
+              } shadow-sm flex flex-col justify-between`}
+            >
+              <div>
+                <span className="text-[11px] font-mono uppercase tracking-wider text-[#8891a1]">
+                  {item.label}
+                </span>
+                <p className="text-3xl font-bold font-mono text-white mt-1">
+                  {loading ? "--" : item.value}
+                </p>
+              </div>
+              <span className="text-[11px] text-[#8891a1] mt-3 font-mono flex items-center space-x-1">
+                {item.highlight && <span className="w-1.5 h-1.5 rounded-full bg-[#5ab9fc] mr-1"></span>}
+                <span>{item.sub}</span>
+              </span>
+            </div>
           ))}
         </div>
 
+        {/* Form Controls Grid: Project & Testimonial Creation */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className={gradientCard}>
-            <CardHeader>
-              <CardTitle>{editingProject ? "Edit Project" : "Create Project"}</CardTitle>
-              <CardDescription className="text-slate-300">Showcase your work with visuals and stack.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form className="space-y-3" onSubmit={handleProjectSubmit}>
-                <Input
-                  placeholder="Title"
+          {/* Project Form Card */}
+          <div className={studioCard}>
+            <div className="flex items-center space-x-2.5 mb-5 pb-4 border-b border-[#232b3e]">
+              <FolderPlus className="w-5 h-5 text-[#5ab9fc]" />
+              <div>
+                <h2 className="text-base font-bold text-white">
+                  {editingProject ? "Update Portfolio Project" : "Publish Portfolio Project"}
+                </h2>
+                <p className="text-xs text-[#8891a1] font-mono">
+                  Bespoke work showcase and case study contract
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleProjectSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-mono uppercase tracking-wider text-[#8891a1] mb-1.5">
+                  Project Title
+                </label>
+                <input
+                  required
+                  type="text"
+                  placeholder="e.g. Nimbus Cloud Orchestration"
                   value={projectForm.title}
                   onChange={(e) => setProjectForm((f) => ({ ...f, title: e.target.value }))}
-                  className="bg-white/5 border-cyan-500/20 text-white"
+                  className="w-full px-3.5 py-2 rounded-lg bg-[#0d111c] border border-[#232b3e] text-sm text-white placeholder-[#454e5f] focus:outline-none focus:border-[#5ab9fc] transition-colors"
                 />
-                <Textarea
-                  placeholder="Description"
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono uppercase tracking-wider text-[#8891a1] mb-1.5">
+                  Description
+                </label>
+                <textarea
+                  required
+                  rows={3}
+                  placeholder="Technical summary, client outcome, and architecture highlights..."
                   value={projectForm.description}
                   onChange={(e) => setProjectForm((f) => ({ ...f, description: e.target.value }))}
-                  className="bg-white/5 border-cyan-500/20 text-white"
+                  className="w-full px-3.5 py-2 rounded-lg bg-[#0d111c] border border-[#232b3e] text-sm text-white placeholder-[#454e5f] focus:outline-none focus:border-[#5ab9fc] transition-colors resize-none"
                 />
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <Input
-                    placeholder="Category"
-                    list="project-categories"
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-mono uppercase tracking-wider text-[#8891a1] mb-1.5">
+                    Category
+                  </label>
+                  <input
+                    list="category-options-list"
                     value={projectForm.category}
                     onChange={(e) => setProjectForm((f) => ({ ...f, category: e.target.value }))}
-                    className="bg-white/5 border-cyan-500/20 text-white"
+                    className="w-full px-3.5 py-2 rounded-lg bg-[#0d111c] border border-[#232b3e] text-sm text-white placeholder-[#454e5f] focus:outline-none focus:border-[#5ab9fc] transition-colors"
                   />
-                  <Input
-                    placeholder="Technologies (comma separated)"
+                  <datalist id="category-options-list">
+                    {categoryOptions.map((c) => (
+                      <option key={c} value={c} />
+                    ))}
+                  </datalist>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono uppercase tracking-wider text-[#8891a1] mb-1.5">
+                    Technologies
+                  </label>
+                  <input
                     value={projectForm.technologiesText}
                     onChange={(e) => setProjectForm((f) => ({ ...f, technologiesText: e.target.value }))}
-                    className="bg-white/5 border-cyan-500/20 text-white"
+                    placeholder="React, FastAPI, Docker"
+                    className="w-full px-3.5 py-2 rounded-lg bg-[#0d111c] border border-[#232b3e] text-sm text-white placeholder-[#454e5f] focus:outline-none focus:border-[#5ab9fc] transition-colors"
                   />
                 </div>
-                <datalist id="project-categories">
-                  {categoryOptions.map((c) => (
-                    <option key={c} value={c} />
-                  ))}
-                </datalist>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <Input
-                    placeholder="Image URL"
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-mono uppercase tracking-wider text-[#8891a1] mb-1.5">
+                    Image URL
+                  </label>
+                  <input
                     value={projectForm.image}
                     onChange={(e) => setProjectForm((f) => ({ ...f, image: e.target.value }))}
-                    className="bg-white/5 border-cyan-500/20 text-white"
-                  />
-                  <Input
-                    placeholder="Live link"
-                    value={projectForm.link}
-                    onChange={(e) => setProjectForm((f) => ({ ...f, link: e.target.value }))}
-                    className="bg-white/5 border-cyan-500/20 text-white"
+                    placeholder="https://... or upload below"
+                    className="w-full px-3.5 py-2 rounded-lg bg-[#0d111c] border border-[#232b3e] text-sm text-white placeholder-[#454e5f] focus:outline-none focus:border-[#5ab9fc] transition-colors font-mono text-xs"
                   />
                 </div>
-                <div className="flex items-center gap-3">
+
+                <div>
+                  <label className="block text-xs font-mono uppercase tracking-wider text-[#8891a1] mb-1.5">
+                    Live Link
+                  </label>
+                  <input
+                    value={projectForm.link}
+                    onChange={(e) => setProjectForm((f) => ({ ...f, link: e.target.value }))}
+                    placeholder="https://example.com"
+                    className="w-full px-3.5 py-2 rounded-lg bg-[#0d111c] border border-[#232b3e] text-sm text-white placeholder-[#454e5f] focus:outline-none focus:border-[#5ab9fc] transition-colors font-mono text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Upload trigger */}
+              <div className="p-3 rounded-lg bg-[#0d111c] border border-[#232b3e] flex items-center justify-between text-xs">
+                <label className="flex items-center space-x-2 cursor-pointer text-[#8891a1] hover:text-white transition-colors">
+                  <Upload className="w-4 h-4 text-[#5ab9fc]" />
+                  <span>Upload screenshot asset</span>
                   <input
                     type="file"
                     accept="image/*"
                     onChange={(e) => handleUpload(e.target.files?.[0], "projects", (url) => setProjectForm((f) => ({ ...f, image: url })))}
-                    className="text-slate-200 text-sm"
+                    className="hidden"
                   />
-                  {projectForm.image && <span className="text-xs text-cyan-300">Image ready ✓</span>}
-                </div>
-                <div className="flex items-center gap-3">
-                  {editingProject && (
-                    <Button type="button" variant="ghost" className="text-slate-300" onClick={() => setEditingProject(null)}>
-                      Cancel edit
-                    </Button>
-                  )}
-                  <Button type="submit" className="bg-gradient-to-r from-cyan-500 via-blue-500 to-fuchsia-500 text-white">
-                    {editingProject ? "Update project" : "Create project"}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
+                </label>
+                {projectForm.image && (
+                  <span className="text-[#5ab9fc] font-mono text-[11px] flex items-center space-x-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Asset linked</span>
+                  </span>
+                )}
+              </div>
 
-          <Card className={gradientCard}>
-            <CardHeader>
-              <CardTitle>{editingTestimonial ? "Edit Testimonial" : "Create Testimonial"}</CardTitle>
-              <CardDescription className="text-slate-300">Add social proof from happy clients.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form className="space-y-3" onSubmit={handleTestimonialSubmit}>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <Input
-                    placeholder="Name"
+              {/* Buttons */}
+              <div className="flex items-center justify-end space-x-3 pt-2">
+                {editingProject && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingProject(null);
+                      setProjectForm({ title: "", description: "", category: "Web Development", technologiesText: "React, FastAPI, Supabase", image: "", link: "" });
+                    }}
+                    className="btn-secondary text-xs px-4 py-2"
+                  >
+                    Cancel Edit
+                  </button>
+                )}
+                <button type="submit" className="btn-primary text-xs px-5 py-2">
+                  {editingProject ? "Update Project" : "Publish Project"}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Testimonial Form Card */}
+          <div className={studioCard}>
+            <div className="flex items-center space-x-2.5 mb-5 pb-4 border-b border-[#232b3e]">
+              <MessageSquarePlus className="w-5 h-5 text-[#5ab9fc]" />
+              <div>
+                <h2 className="text-base font-bold text-white">
+                  {editingTestimonial ? "Update Testimonial" : "Add Verified Testimonial"}
+                </h2>
+                <p className="text-xs text-[#8891a1] font-mono">
+                  Social proof and authentic client reviews
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleTestimonialSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-mono uppercase tracking-wider text-[#8891a1] mb-1.5">
+                    Client Name
+                  </label>
+                  <input
+                    required
                     value={testimonialForm.name}
                     onChange={(e) => setTestimonialForm((f) => ({ ...f, name: e.target.value }))}
-                    className="bg-white/5 border-cyan-500/20 text-white"
-                  />
-                  <Input
-                    placeholder="Role"
-                    value={testimonialForm.role}
-                    onChange={(e) => setTestimonialForm((f) => ({ ...f, role: e.target.value }))}
-                    className="bg-white/5 border-cyan-500/20 text-white"
+                    placeholder="e.g. Vikramaditya Rao"
+                    className="w-full px-3.5 py-2 rounded-lg bg-[#0d111c] border border-[#232b3e] text-sm text-white placeholder-[#454e5f] focus:outline-none focus:border-[#5ab9fc] transition-colors"
                   />
                 </div>
-                <Textarea
-                  placeholder="What did they say?"
+
+                <div>
+                  <label className="block text-xs font-mono uppercase tracking-wider text-[#8891a1] mb-1.5">
+                    Role / Company
+                  </label>
+                  <input
+                    required
+                    value={testimonialForm.role}
+                    onChange={(e) => setTestimonialForm((f) => ({ ...f, role: e.target.value }))}
+                    placeholder="e.g. VP Engineering, Stratos"
+                    className="w-full px-3.5 py-2 rounded-lg bg-[#0d111c] border border-[#232b3e] text-sm text-white placeholder-[#454e5f] focus:outline-none focus:border-[#5ab9fc] transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono uppercase tracking-wider text-[#8891a1] mb-1.5">
+                  Review Statement
+                </label>
+                <textarea
+                  required
+                  rows={3}
                   value={testimonialForm.content}
                   onChange={(e) => setTestimonialForm((f) => ({ ...f, content: e.target.value }))}
-                  className="bg-white/5 border-cyan-500/20 text-white"
+                  placeholder="What was the outcome of working with the studio?"
+                  className="w-full px-3.5 py-2 rounded-lg bg-[#0d111c] border border-[#232b3e] text-sm text-white placeholder-[#454e5f] focus:outline-none focus:border-[#5ab9fc] transition-colors resize-none"
                 />
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <Input
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-mono uppercase tracking-wider text-[#8891a1] mb-1.5">
+                    Rating (1 to 5)
+                  </label>
+                  <input
                     type="number"
                     min={1}
                     max={5}
-                    placeholder="Rating (1-5)"
                     value={testimonialForm.rating}
                     onChange={(e) => setTestimonialForm((f) => ({ ...f, rating: e.target.value }))}
-                    className="bg-white/5 border-cyan-500/20 text-white"
-                  />
-                  <Input
-                    placeholder="Avatar URL"
-                    value={testimonialForm.avatar}
-                    onChange={(e) => setTestimonialForm((f) => ({ ...f, avatar: e.target.value }))}
-                    className="bg-white/5 border-cyan-500/20 text-white"
+                    className="w-full px-3.5 py-2 rounded-lg bg-[#0d111c] border border-[#232b3e] text-sm text-white placeholder-[#454e5f] focus:outline-none focus:border-[#5ab9fc] transition-colors"
                   />
                 </div>
-                <div className="flex items-center gap-3">
+
+                <div>
+                  <label className="block text-xs font-mono uppercase tracking-wider text-[#8891a1] mb-1.5">
+                    Avatar URL
+                  </label>
+                  <input
+                    value={testimonialForm.avatar}
+                    onChange={(e) => setTestimonialForm((f) => ({ ...f, avatar: e.target.value }))}
+                    placeholder="https://... or upload below"
+                    className="w-full px-3.5 py-2 rounded-lg bg-[#0d111c] border border-[#232b3e] text-sm text-white placeholder-[#454e5f] focus:outline-none focus:border-[#5ab9fc] transition-colors font-mono text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Upload avatar */}
+              <div className="p-3 rounded-lg bg-[#0d111c] border border-[#232b3e] flex items-center justify-between text-xs">
+                <label className="flex items-center space-x-2 cursor-pointer text-[#8891a1] hover:text-white transition-colors">
+                  <Upload className="w-4 h-4 text-[#5ab9fc]" />
+                  <span>Upload client avatar</span>
                   <input
                     type="file"
                     accept="image/*"
                     onChange={(e) => handleUpload(e.target.files?.[0], "testimonials", (url) => setTestimonialForm((f) => ({ ...f, avatar: url })))}
-                    className="text-slate-200 text-sm"
+                    className="hidden"
                   />
-                  {testimonialForm.avatar && <span className="text-xs text-cyan-300">Avatar ready ✓</span>}
-                </div>
-                <div className="flex items-center gap-3">
-                  {editingTestimonial && (
-                    <Button type="button" variant="ghost" className="text-slate-300" onClick={() => setEditingTestimonial(null)}>
-                      Cancel edit
-                    </Button>
-                  )}
-                  <Button type="submit" className="bg-gradient-to-r from-cyan-500 via-blue-500 to-fuchsia-500 text-white">
-                    {editingTestimonial ? "Update testimonial" : "Create testimonial"}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
+                </label>
+                {testimonialForm.avatar && (
+                  <span className="text-[#5ab9fc] font-mono text-[11px] flex items-center space-x-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Avatar ready</span>
+                  </span>
+                )}
+              </div>
+
+              {/* Buttons */}
+              <div className="flex items-center justify-end space-x-3 pt-2">
+                {editingTestimonial && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingTestimonial(null);
+                      setTestimonialForm({ name: "", role: "", content: "", rating: 5, avatar: "" });
+                    }}
+                    className="btn-secondary text-xs px-4 py-2"
+                  >
+                    Cancel Edit
+                  </button>
+                )}
+                <button type="submit" className="btn-primary text-xs px-5 py-2">
+                  {editingTestimonial ? "Update Testimonial" : "Publish Testimonial"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
 
+        {/* Existing Content Lists: Projects & Testimonials */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className={gradientCard}>
-            <CardHeader>
-              <CardTitle>Projects</CardTitle>
-              <CardDescription className="text-slate-300">Manage portfolio entries.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {projects.length === 0 && <p className="text-slate-400 text-sm">No projects yet.</p>}
-              {projects.map((project) => (
-                <div key={project.id} className="border border-cyan-500/20 rounded-lg p-4 bg-white/5">
-                  <div className="flex justify-between items-start gap-3">
+          {/* Projects List */}
+          <div className={studioCard}>
+            <div className="flex items-center justify-between mb-5 pb-4 border-b border-[#232b3e]">
+              <div>
+                <h3 className="text-base font-bold text-white">Live Portfolio Projects</h3>
+                <p className="text-xs text-[#8891a1] font-mono">
+                  {projects.length} published case studies
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+              {projects.length === 0 ? (
+                <p className="text-xs text-[#8891a1] py-8 text-center font-mono">
+                  No projects in database yet.
+                </p>
+              ) : (
+                projects.map((project) => (
+                  <div
+                    key={project.id}
+                    className="p-4 rounded-xl bg-[#0d111c] border border-[#232b3e] flex flex-col justify-between gap-3 group hover:border-[#5ab9fc]/40 transition-colors"
+                  >
                     <div>
-                      <p className="text-lg font-semibold text-white">{project.title}</p>
-                      <p className="text-sm text-slate-300">{project.description}</p>
-                      <p className="text-xs text-cyan-200 mt-1">{project.category}</p>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {project.technologies.map((tech) => (
-                          <span key={tech} className="text-xs px-2 py-1 bg-cyan-500/10 text-cyan-200 rounded-full border border-cyan-500/30">{tech}</span>
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className="text-sm font-semibold text-white group-hover:text-[#5ab9fc] transition-colors">
+                          {project.title}
+                        </h4>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#182030] border border-[#232b3e] text-[#5ab9fc]">
+                          {project.category}
+                        </span>
+                      </div>
+                      <p className="text-xs text-[#8891a1] mt-1.5 line-clamp-2 leading-relaxed">
+                        {project.description}
+                      </p>
+                      <div className="flex flex-wrap gap-1.5 mt-2.5">
+                        {(project.technologies || []).map((t) => (
+                          <span
+                            key={t}
+                            className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#131824] border border-[#232b3e] text-[#8891a1]"
+                          >
+                            {t}
+                          </span>
                         ))}
                       </div>
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <Button size="sm" variant="secondary" className="bg-white/10" onClick={() => handleProjectEdit(project)}>
-                        Edit
-                      </Button>
-                      <Button size="sm" variant="destructive" onClick={() => handleProjectDelete(project.id)}>
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
 
-          <Card className={gradientCard}>
-            <CardHeader>
-              <CardTitle>Testimonials</CardTitle>
-              <CardDescription className="text-slate-300">Edit social proof.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {testimonials.length === 0 && <p className="text-slate-400 text-sm">No testimonials yet.</p>}
-              {testimonials.map((t) => (
-                <div key={t.id} className="border border-cyan-500/20 rounded-lg p-4 bg-white/5">
-                  <div className="flex justify-between items-start gap-3">
-                    <div>
-                      <p className="text-lg font-semibold text-white">{t.name}</p>
-                      <p className="text-sm text-slate-300">{t.role}</p>
-                      <p className="text-sm text-slate-200 mt-2">“{t.content}”</p>
-                      <p className="text-xs text-cyan-200 mt-1">Rating: {t.rating}/5</p>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <Button size="sm" variant="secondary" className="bg-white/10" onClick={() => handleTestimonialEdit(t)}>
-                        Edit
-                      </Button>
-                      <Button size="sm" variant="destructive" onClick={() => handleTestimonialDelete(t.id)}>
-                        Delete
-                      </Button>
+                    <div className="flex items-center justify-end space-x-2 pt-2 border-t border-[#232b3e]/60">
+                      <button
+                        type="button"
+                        onClick={() => handleProjectEdit(project)}
+                        className="btn-secondary text-[11px] px-2.5 py-1 flex items-center space-x-1"
+                      >
+                        <Edit2 className="w-3 h-3 text-[#5ab9fc]" />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleProjectDelete(project.id)}
+                        className="px-2.5 py-1 rounded-md bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-[11px] font-mono transition-colors flex items-center space-x-1"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        <span>Delete</span>
+                      </button>
                     </div>
                   </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Testimonials List */}
+          <div className={studioCard}>
+            <div className="flex items-center justify-between mb-5 pb-4 border-b border-[#232b3e]">
+              <div>
+                <h3 className="text-base font-bold text-white">Client Testimonials</h3>
+                <p className="text-xs text-[#8891a1] font-mono">
+                  {testimonials.length} verified reviews
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+              {testimonials.length === 0 ? (
+                <p className="text-xs text-[#8891a1] py-8 text-center font-mono">
+                  No testimonials in database yet.
+                </p>
+              ) : (
+                testimonials.map((t) => (
+                  <div
+                    key={t.id}
+                    className="p-4 rounded-xl bg-[#0d111c] border border-[#232b3e] flex flex-col justify-between gap-3 group hover:border-[#5ab9fc]/40 transition-colors"
+                  >
+                    <div>
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-semibold text-white">{t.name}</p>
+                          <p className="text-xs text-[#8891a1]">{t.role}</p>
+                        </div>
+                        <div className="flex items-center space-x-1 text-amber-400">
+                          <Star className="w-3 h-3 fill-amber-400" />
+                          <span className="text-xs font-mono">{t.rating}/5</span>
+                        </div>
+                      </div>
+                      <p className="text-xs text-[#e9edf3] mt-2 italic line-clamp-2">
+                        “{t.content}”
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-end space-x-2 pt-2 border-t border-[#232b3e]/60">
+                      <button
+                        type="button"
+                        onClick={() => handleTestimonialEdit(t)}
+                        className="btn-secondary text-[11px] px-2.5 py-1 flex items-center space-x-1"
+                      >
+                        <Edit2 className="w-3 h-3 text-[#5ab9fc]" />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleTestimonialDelete(t.id)}
+                        className="px-2.5 py-1 rounded-md bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-[11px] font-mono transition-colors flex items-center space-x-1"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        <span>Delete</span>
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
 
-        <Card className={gradientCard}>
-          <CardHeader>
-            <CardTitle>Contacts</CardTitle>
-            <CardDescription className="text-slate-300">Respond, update status, or clean up.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {contacts.length === 0 && <p className="text-slate-400 text-sm">No contacts yet.</p>}
-            {contacts.map((c) => (
-              <div key={c.id} className="border border-cyan-500/20 rounded-lg p-4 bg-white/5">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                  <div className="space-y-1">
-                    <p className="text-white font-semibold">{c.name} · <span className="text-cyan-200">{c.email}</span></p>
-                    <p className="text-slate-300 text-sm">{c.subject}</p>
-                    <p className="text-slate-200 text-sm">{c.message}</p>
-                    <p className="text-xs text-cyan-200">Status: {c.status}</p>
+        {/* Inbound Contact Enquiries Section */}
+        <div className={studioCard}>
+          <div className="flex items-center justify-between mb-5 pb-4 border-b border-[#232b3e]">
+            <div className="flex items-center space-x-2.5">
+              <Mail className="w-5 h-5 text-[#5ab9fc]" />
+              <div>
+                <h3 className="text-base font-bold text-white">Inbound Client Enquiries</h3>
+                <p className="text-xs text-[#8891a1] font-mono">
+                  Messages submitted via the contact form
+                </p>
+              </div>
+            </div>
+            <span className="text-xs font-mono text-[#8891a1]">
+              {contacts.length} total messages
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            {contacts.length === 0 ? (
+              <p className="text-xs text-[#8891a1] py-8 text-center font-mono">
+                No client enquiries yet.
+              </p>
+            ) : (
+              contacts.map((c) => (
+                <div
+                  key={c.id}
+                  className="p-4 rounded-xl bg-[#0d111c] border border-[#232b3e] flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+                >
+                  <div className="space-y-1.5 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-semibold text-white">{c.name}</span>
+                      <span className="text-xs font-mono text-[#5ab9fc]">{c.email}</span>
+                      {c.subject && (
+                        <span className="text-xs font-mono px-2 py-0.5 rounded bg-[#182030] text-[#8891a1]">
+                          {c.subject}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-[#e9edf3] leading-relaxed bg-[#131824] p-3 rounded-lg border border-[#232b3e]/60">
+                      {c.message}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-2">
+
+                  <div className="flex items-center gap-2.5 self-end md:self-center">
                     <select
                       value={c.status}
                       onChange={(e) => handleContactStatus(c.id, e.target.value)}
-                      className="bg-white/5 border border-cyan-500/30 rounded-md px-2 py-1 text-sm text-white"
+                      className="bg-[#131824] border border-[#232b3e] rounded-lg px-2.5 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-[#5ab9fc]"
                     >
-                      <option value="new">new</option>
+                      <option value="new">● new</option>
                       <option value="read">read</option>
                       <option value="replied">replied</option>
                     </select>
-                    <Button size="sm" variant="destructive" onClick={() => handleContactDelete(c.id)}>
-                      Delete
-                    </Button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleContactDelete(c.id)}
+                      className="p-2 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-colors"
+                      title="Delete enquiry"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+              ))
+            )}
+          </div>
+        </div>
 
         {/* Manage Admins Dialog */}
         <Dialog open={isAdminModalOpen} onOpenChange={setIsAdminModalOpen}>
-          <DialogContent className="bg-[#0B1120] border-slate-800 text-white max-w-xl max-h-[85vh] overflow-y-auto">
+          <DialogContent className="bg-[#131824] border border-[#232b3e] text-[#e9edf3] max-w-xl max-h-[85vh] overflow-y-auto">
             <DialogHeader>
-              <div className="flex items-center space-x-2 text-cyan-400 mb-1">
+              <div className="flex items-center space-x-2 text-[#5ab9fc] mb-1">
                 <Users className="w-5 h-5" />
-                <DialogTitle className="text-xl font-bold text-white">Admin Accounts</DialogTitle>
+                <DialogTitle className="text-xl font-bold text-white">Administrator Accounts</DialogTitle>
               </div>
-              <DialogDescription className="text-slate-400 text-sm">
-                Create new studio admins and review active administrator permissions.
+              <DialogDescription className="text-xs text-[#8891a1] font-mono">
+                Manage administrative personnel and credentials for SB Dev Studio.
               </DialogDescription>
             </DialogHeader>
 
             {/* Create Admin Form */}
-            <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800/80 space-y-3 mt-2">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-cyan-300 flex items-center space-x-1.5">
+            <div className="p-4 rounded-xl bg-[#0d111c] border border-[#232b3e] space-y-3 mt-2">
+              <h4 className="text-xs font-mono uppercase tracking-wider text-[#5ab9fc] flex items-center space-x-1.5">
                 <UserPlus className="w-3.5 h-3.5" />
                 <span>Create New Admin</span>
               </h4>
               <form onSubmit={handleCreateAdmin} className="space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[11px] text-slate-300 block mb-1">Username</label>
-                    <Input
+                    <label className="text-[11px] font-mono text-[#8891a1] block mb-1">Username</label>
+                    <input
                       required
                       placeholder="e.g. johndoe"
                       value={newAdminForm.username}
                       onChange={(e) => setNewAdminForm((f) => ({ ...f, username: e.target.value }))}
-                      className="bg-slate-950/70 border-slate-700 text-white text-xs"
+                      className="w-full px-3 py-1.5 rounded-lg bg-[#131824] border border-[#232b3e] text-xs text-white placeholder-[#454e5f] focus:outline-none focus:border-[#5ab9fc]"
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] text-slate-300 block mb-1">Admin Email</label>
-                    <Input
+                    <label className="text-[11px] font-mono text-[#8891a1] block mb-1">Admin Email</label>
+                    <input
                       type="email"
                       required
                       placeholder="e.g. john@sbdevstudio.in"
                       value={newAdminForm.email}
                       onChange={(e) => setNewAdminForm((f) => ({ ...f, email: e.target.value }))}
-                      className="bg-slate-950/70 border-slate-700 text-white text-xs"
+                      className="w-full px-3 py-1.5 rounded-lg bg-[#131824] border border-[#232b3e] text-xs text-white placeholder-[#454e5f] focus:outline-none focus:border-[#5ab9fc]"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="text-[11px] text-slate-300 block mb-1">Temporary Password (min 6 chars)</label>
-                  <Input
+                  <label className="text-[11px] font-mono text-[#8891a1] block mb-1">Temporary Password (min 6 chars)</label>
+                  <input
                     type="password"
                     required
-                    placeholder="••••••••"
+                    placeholder="••••••••••••"
                     value={newAdminForm.password}
                     onChange={(e) => setNewAdminForm((f) => ({ ...f, password: e.target.value }))}
-                    className="bg-slate-950/70 border-slate-700 text-white text-xs"
+                    className="w-full px-3 py-1.5 rounded-lg bg-[#131824] border border-[#232b3e] text-xs text-white placeholder-[#454e5f] focus:outline-none focus:border-[#5ab9fc]"
                   />
                 </div>
-                <Button
+                <button
                   type="submit"
                   disabled={isCreatingAdmin}
-                  className="w-full btn-primary text-xs py-2 font-medium"
+                  className="w-full btn-primary text-xs py-2 disabled:opacity-50"
                 >
-                  {isCreatingAdmin ? "Creating Admin..." : "Add Administrator"}
-                </Button>
+                  {isCreatingAdmin ? "Initializing Admin..." : "Add Administrator"}
+                </button>
               </form>
             </div>
 
             {/* Existing Admins List */}
             <div className="space-y-2 mt-4">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Current Administrators ({adminList.length})
+              <h4 className="text-xs font-mono uppercase tracking-wider text-[#8891a1]">
+                Active Administrators ({adminList.length})
               </h4>
               {adminListLoading ? (
-                <p className="text-xs text-slate-400 py-2">Loading administrators...</p>
+                <p className="text-xs text-[#8891a1] py-2 font-mono">Loading administrators...</p>
               ) : (
                 <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                   {adminList.map((admin) => (
                     <div
                       key={admin.id}
-                      className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-800 text-xs"
+                      className="flex items-center justify-between p-3 rounded-lg bg-[#0d111c] border border-[#232b3e] text-xs"
                     >
                       <div>
                         <p className="font-semibold text-white">{admin.username}</p>
-                        <p className="text-slate-400 text-[11px]">{admin.email}</p>
+                        <p className="text-[#8891a1] text-[11px] font-mono">{admin.email}</p>
                       </div>
-                      <span className="text-[10px] text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-full font-medium">
+                      <span className="text-[10px] font-mono text-[#5ab9fc] bg-[#5ab9fc]/10 border border-[#5ab9fc]/20 px-2 py-0.5 rounded-md">
                         Active
                       </span>
                     </div>
@@ -710,77 +1001,74 @@ const AdminDashboard = () => {
 
         {/* Change Password Dialog */}
         <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>
-          <DialogContent className="bg-[#0B1120] border-slate-800 text-white max-w-md">
+          <DialogContent className="bg-[#131824] border border-[#232b3e] text-[#e9edf3] max-w-md">
             <DialogHeader>
-              <div className="flex items-center space-x-2 text-cyan-400 mb-1">
+              <div className="flex items-center space-x-2 text-[#5ab9fc] mb-1">
                 <KeyRound className="w-5 h-5" />
                 <DialogTitle className="text-xl font-bold text-white">Change Password</DialogTitle>
               </div>
-              <DialogDescription className="text-slate-400 text-sm">
-                Update your administrator account password.
+              <DialogDescription className="text-xs text-[#8891a1] font-mono">
+                Update credentials for your administrator account.
               </DialogDescription>
             </DialogHeader>
 
             <form onSubmit={handleChangePassword} className="space-y-3.5 mt-2">
               <div>
-                <label className="text-xs text-slate-300 block mb-1">Current Password</label>
-                <Input
+                <label className="text-xs font-mono text-[#8891a1] block mb-1">Current Password</label>
+                <input
                   type="password"
                   required
-                  placeholder="••••••••"
+                  placeholder="••••••••••••"
                   value={passwordForm.current_password}
                   onChange={(e) => setPasswordForm((f) => ({ ...f, current_password: e.target.value }))}
-                  className="bg-slate-900 border-slate-700 text-white text-xs"
+                  className="w-full px-3 py-2 rounded-lg bg-[#0d111c] border border-[#232b3e] text-xs text-white placeholder-[#454e5f] focus:outline-none focus:border-[#5ab9fc]"
                 />
               </div>
 
               <div>
-                <label className="text-xs text-slate-300 block mb-1">New Password (min 6 chars)</label>
-                <Input
+                <label className="text-xs font-mono text-[#8891a1] block mb-1">New Password (min 6 chars)</label>
+                <input
                   type="password"
                   required
-                  placeholder="••••••••"
+                  placeholder="••••••••••••"
                   value={passwordForm.new_password}
                   onChange={(e) => setPasswordForm((f) => ({ ...f, new_password: e.target.value }))}
-                  className="bg-slate-900 border-slate-700 text-white text-xs"
+                  className="w-full px-3 py-2 rounded-lg bg-[#0d111c] border border-[#232b3e] text-xs text-white placeholder-[#454e5f] focus:outline-none focus:border-[#5ab9fc]"
                 />
               </div>
 
               <div>
-                <label className="text-xs text-slate-300 block mb-1">Confirm New Password</label>
-                <Input
+                <label className="text-xs font-mono text-[#8891a1] block mb-1">Confirm New Password</label>
+                <input
                   type="password"
                   required
-                  placeholder="••••••••"
+                  placeholder="••••••••••••"
                   value={passwordForm.confirm_password}
                   onChange={(e) => setPasswordForm((f) => ({ ...f, confirm_password: e.target.value }))}
-                  className="bg-slate-900 border-slate-700 text-white text-xs"
+                  className="w-full px-3 py-2 rounded-lg bg-[#0d111c] border border-[#232b3e] text-xs text-white placeholder-[#454e5f] focus:outline-none focus:border-[#5ab9fc]"
                 />
               </div>
 
               <div className="flex items-center justify-end space-x-2 pt-2">
-                <Button
+                <button
                   type="button"
-                  variant="secondary"
-                  className="bg-white/5 border border-slate-700 text-xs text-slate-300"
+                  className="btn-secondary text-xs px-3 py-2"
                   onClick={() => setIsPasswordModalOpen(false)}
                 >
                   Cancel
-                </Button>
-                <Button
+                </button>
+                <button
                   type="submit"
                   disabled={isChangingPassword}
-                  className="btn-primary text-xs py-2 font-medium"
+                  className="btn-primary text-xs px-4 py-2 disabled:opacity-50"
                 >
                   {isChangingPassword ? "Updating..." : "Update Password"}
-                </Button>
+                </button>
               </div>
             </form>
           </DialogContent>
         </Dialog>
-      </div>
+      </main>
     </div>
   );
-};
-
-export default AdminDashboard;
+}

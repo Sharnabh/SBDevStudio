@@ -135,6 +135,8 @@ const Navbar = () => {
             className="text-[#8891a1] hover:text-white p-2 rounded-lg bg-[#131824] border border-[rgba(233,237,243,0.08)]"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle Navigation Menu"
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="mobile-nav-menu"
           >
             {isMobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
@@ -143,7 +145,10 @@ const Navbar = () => {
 
       {/* Mobile Drawer */}
       {isMobileMenuOpen && (
-        <div className="md:hidden mt-2 max-w-6xl mx-auto rounded-xl bg-[#0a0d14]/98 backdrop-blur-2xl border border-[rgba(233,237,243,0.12)] p-5 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200">
+        <div
+          id="mobile-nav-menu"
+          className="md:hidden mt-2 max-w-6xl mx-auto rounded-xl bg-[#0a0d14]/98 backdrop-blur-2xl border border-[rgba(233,237,243,0.12)] p-5 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200"
+        >
           <div className="flex items-center space-x-2 px-3 py-1.5 rounded-md bg-[#131824] border border-[rgba(233,237,243,0.08)] text-xs text-[#8891a1] font-mono w-fit mb-4">
             <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
             <span>Available for new client work</span>

@@ -108,12 +108,13 @@
         }
         </script>
 
-        <script src="https://assets.emergent.sh/scripts/emergent-main.js"></script>
+        <script defer src="https://assets.emergent.sh/scripts/emergent-main.js"></script>
         <!-- Visual Edits Scripts -->
         <script>
             if (window.self !== window.top) {
                 var debugMonitorScript = document.createElement('script');
                 debugMonitorScript.src = 'https://assets.emergent.sh/scripts/debug-monitor.js';
+                debugMonitorScript.defer = true;
                 document.head.appendChild(debugMonitorScript);
 
                 window.tailwind = window.tailwind || {};
@@ -123,11 +124,12 @@
 
                 var tailwindScript = document.createElement('script');
                 tailwindScript.src = 'https://cdn.tailwindcss.com';
+                tailwindScript.defer = true;
                 document.head.appendChild(tailwindScript);
             }
         </script>
     </head>
-    <body class="bg-[#070B14] text-slate-100 antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
+    <body class="bg-[#0a0d14] text-[#e9edf3] antialiased selection:bg-[#5ab9fc]/20 selection:text-[#5ab9fc]">
         <noscript>You need to enable JavaScript to run this app.</noscript>
         <div id="root"></div>
 
