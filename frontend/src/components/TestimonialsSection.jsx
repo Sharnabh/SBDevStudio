@@ -38,7 +38,7 @@ const TestimonialsSection = () => {
   return (
     <section id="testimonials" className="relative py-20 sm:py-28 bg-[#0a0d14] border-t border-[rgba(233,237,243,0.06)]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Section Heading */}
         <div className="text-center max-w-2xl mx-auto mb-16">
           <div className="section-label mb-4">
