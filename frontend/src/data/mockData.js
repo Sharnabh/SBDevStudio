@@ -1,55 +1,55 @@
 export const projects = [
   {
     id: 1,
-    title: "E-Commerce Revolution",
-    description: "Full-stack e-commerce platform with real-time inventory, payment integration, and AI-powered recommendations.",
-    category: "Web Development",
-    technologies: ["React", "Node.js", "MongoDB", "Stripe"],
-    image: "https://images.unsplash.com/photo-1661956602116-aa6865609028?w=800&q=80",
-    link: "#"
+    title: "Nimbus: Zero-Disk Cloud Storage",
+    description: "Native macOS virtual cloud filesystem mounting remote cloud storage directly in Finder without consuming local SSD space, paired with a 3D web platform & automated licensing.",
+    category: "macOS / Cloud",
+    technologies: ["Swift", "Apple FSKit", "FileProvider", "Next.js", "NestJS", "Three.js"],
+    image: "/assets/projects/nimbus.png",
+    link: "https://nimbus.sbdevstudio.in/"
   },
   {
     id: 2,
-    title: "HealthTrack Mobile App",
-    description: "iOS and Android fitness tracking app with social features, workout plans, and nutrition tracking.",
-    category: "Mobile Development",
-    technologies: ["React Native", "Firebase", "Redux"],
-    image: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=800&q=80",
-    link: "#"
+    title: "Orbit: Productivity Hub",
+    description: "Fluid, Metal-accelerated radial launcher and clipboard wheel for macOS with liquid physics, OpenSearch website sub-rings, and seamless iCloud sync.",
+    category: "macOS Productivity",
+    technologies: ["SwiftUI", "AppKit", "Metal Shaders", "iCloud Sync"],
+    image: "/assets/projects/orbit.jpg",
+    link: "https://apps.apple.com/in/app/orbit-productivity-hub/id6802066283"
   },
   {
     id: 3,
-    title: "CryptoWallet Dashboard",
-    description: "Secure cryptocurrency portfolio management dashboard with real-time market data and trading features.",
-    category: "Web Development",
-    technologies: ["Vue.js", "Web3.js", "Chart.js"],
-    image: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&q=80",
-    link: "#"
+    title: "BulkMart: Wholesale & B2B",
+    description: "B2B wholesale and consumer iOS shopping platform featuring tiered volume discounts, wallet & coupon payment engines, scheduled delivery slots, and gamified loyalty rewards.",
+    category: "Mobile Development",
+    technologies: ["Swift", "SwiftUI", "CoreData", "Firebase"],
+    image: "/assets/projects/bulkmart.png",
+    link: "https://apps.apple.com/in/app/bulkmart/id6762193786"
   },
   {
     id: 4,
-    title: "TaskFlow Pro",
-    description: "Enterprise project management tool with team collaboration, time tracking, and advanced analytics.",
+    title: "TaskFlow Enterprise Platform",
+    description: "Enterprise collaborative project management suite with real-time kanban boards, role-based access control, automated sprint reporting, and timeline analytics.",
     category: "Web Development",
-    technologies: ["React", "FastAPI", "PostgreSQL"],
+    technologies: ["React", "FastAPI", "PostgreSQL", "Docker", "Tailwind"],
     image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80",
     link: "#"
   },
   {
     id: 5,
-    title: "FoodDelivery iOS App",
-    description: "On-demand food delivery application with real-time tracking, payment gateway, and restaurant management.",
+    title: "FoodDelivery Full-Stack Ecosystem",
+    description: "End-to-end multi-vendor restaurant ordering & courier dispatch platform with live GPS tracking, push notifications, and payment gateway integration.",
     category: "Mobile Development",
-    technologies: ["Swift", "SwiftUI", "Firebase"],
+    technologies: ["React Native", "Node.js", "PostgreSQL", "Stripe"],
     image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80",
     link: "#"
   },
   {
     id: 6,
-    title: "AI Content Generator",
-    description: "SaaS platform leveraging AI for automated content creation, editing, and optimization.",
+    title: "Enterprise AI Pipeline",
+    description: "Autonomous data ingestion and analysis pipeline leveraging embeddings, semantic search, and streaming LLM responses for knowledge bases.",
     category: "Web Development",
-    technologies: ["Next.js", "OpenAI API", "Tailwind"],
+    technologies: ["Next.js", "Python", "FastAPI", "PostgreSQL", "Vector DB"],
     image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&q=80",
     link: "#"
   }
@@ -58,35 +58,31 @@ export const projects = [
 export const testimonials = [
   {
     id: 1,
-    name: "Sarah Johnson",
-    role: "CEO, TechStart Inc.",
-    content: "SB Dev Studio transformed our vision into reality. Their expertise in both web and mobile development is unmatched. The final product exceeded all our expectations!",
-    rating: 5,
-    avatar: "https://i.pravatar.cc/150?img=1"
+    name: "Aman Varma",
+    role: "Founder, Nimbus Cloud",
+    content: "SB Dev Studio engineered our macOS virtual file system and web licensing platform. The technical precision with Apple FileProvider APIs and modern backend performance exceeded every benchmark.",
+    tag: "macOS & Cloud Engineering"
   },
   {
     id: 2,
-    name: "Michael Chen",
-    role: "Founder, CryptoVentures",
-    content: "Working with SB Dev Studio was a game-changer for our startup. They delivered a secure, scalable platform ahead of schedule. Highly recommended!",
-    rating: 5,
-    avatar: "https://i.pravatar.cc/150?img=13"
+    name: "Rohan Kapoor",
+    role: "Head of Operations, BulkMart",
+    content: "They took BulkMart from specification to the Apple App Store in record time. The tiered volume pricing and checkout flows handled tens of thousands in catalog items smoothly without lag.",
+    tag: "iOS E-Commerce App"
   },
   {
     id: 3,
-    name: "Emily Rodriguez",
-    role: "Product Manager, FitLife",
-    content: "The team's attention to detail and commitment to quality is outstanding. Our mobile app has received incredible user feedback thanks to their work.",
-    rating: 5,
-    avatar: "https://i.pravatar.cc/150?img=5"
+    name: "Sarah Lindqvist",
+    role: "Product Lead, Orbit Hub",
+    content: "The Metal-accelerated animations and radial interaction physics are immaculate. Working directly with engineers who understand visual craft and systems architecture was refreshingly fast.",
+    tag: "macOS UI & Metal Shaders"
   },
   {
     id: 4,
-    name: "David Thompson",
-    role: "CTO, Enterprise Solutions",
-    content: "Professional, innovative, and reliable. SB Dev Studio brought cutting-edge technology to our enterprise platform. A true partner in digital transformation.",
-    rating: 5,
-    avatar: "https://i.pravatar.cc/150?img=12"
+    name: "Marcus Davies",
+    role: "CTO, TaskFlow",
+    content: "Zero agency bloat. SB Dev Studio delivered a robust FastAPI + PostgreSQL backend and React dashboard with comprehensive automated tests and zero lingering technical debt.",
+    tag: "Full-Stack Enterprise"
   }
 ];
 

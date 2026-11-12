@@ -4,21 +4,21 @@ import HeroSection from '../components/HeroSection';
 import AboutSection from '../components/AboutSection';
 import AbilitiesSection from '../components/AbilitiesSection';
 import ProjectsSection from '../components/ProjectsSection';
-import TestimonialsSection from '../components/TestimonialsSection';
 import TechStackSection from '../components/TechStackSection';
+import TestimonialsSection from '../components/TestimonialsSection';
 import ContactSection from '../components/ContactSection';
 import Footer from '../components/Footer';
 
 const HomePage = () => {
   return (
-    <div className="relative bg-[#070B14] min-h-screen overflow-x-hidden selection:bg-cyan-500/30 selection:text-cyan-200">
+    <div className="relative bg-[#0a0d14] min-h-screen overflow-x-hidden selection:bg-[#5ab9fc]/20 selection:text-[#5ab9fc]">
       <Navbar />
       <HeroSection />
       <AboutSection />
       <AbilitiesSection />
       <ProjectsSection />
-      <TestimonialsSection />
       <TechStackSection />
+      <TestimonialsSection />
       <ContactSection />
       <Footer />
     </div>

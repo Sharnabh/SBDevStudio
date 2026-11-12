@@ -43,6 +43,7 @@ venv/
 backend/uploads/
 
 # Logs and debug files
+.taste-skill/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
